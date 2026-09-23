@@ -1,0 +1,33 @@
+name: just_a_work_app
+description: "求职招聘客户端：对接 just-a-work 招聘求职系统后端（求职者/招聘者双角色）。"
+publish_to: 'none'
+
+version: 1.0.0+1
+
+environment:
+  # 与项目生成工具链一致（Flutter 3.47.x / Dart 3.13+）
+  sdk: '>=3.13.2 <4.0.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+  cupertino_icons: ^1.0.8
+  # HTTP 客户端
+  http: 0.13.6
+  # WebSocket（实时私聊）
+  web_socket_channel: ^3.0.3
+  # 本地持久化目录（token / base URL 等设置）
+  path_provider: ^2.1.6
+  flutter_webrtc: ^1.6.2+hotfix.1
+  geolocator: ^13.0.2
+  geocoding: ^5.0.0
+  url_launcher: ^6.3.2
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  # 解析到兼容当前 Dart SDK 的最新版（旧工具链会回退到 3.0.x）
+  flutter_lints: '>=3.0.2 <7.0.0'
+
+flutter:
+  uses-material-design: true
