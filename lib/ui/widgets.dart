@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 
 import '../core/app_config.dart';
@@ -142,6 +144,8 @@ class AppCard extends StatelessWidget {
 /// 因为凹弧与胶囊同心等距，胶囊左侧与下方的留白完全一致（各 [gap]），胶囊有充足容身位置。
 ///
 /// [fill] 用于打开动画：0 = 完整凹口，1 = 凹口被填平（退化成普通圆角矩形）。
+/// 填充方式是**自内凹角（墙与凹弧的切点）向外扫过**：缺口轮廓本身不缩放、
+/// 凹弧半径始终等于胶囊圆帽半径 + gap，所以填充过程中"胶囊感"的凹弧一直保留。
 class SmoothNotchClipper extends CustomClipper<Path> {
   /// 两端外凸圆角半径（顶边侧与右缘侧一致）
   final double filletRadius;
@@ -191,47 +195,53 @@ class SmoothNotchClipper extends CustomClipper<Path> {
   Path getClip(Size size) {
     final w = size.width;
     final h = size.height;
-    final k = (1 - fill).clamp(0.0, 1.0);
-    final path = Path();
 
-    path.moveTo(0, cornerRadius);
-    path.arcToPoint(Offset(cornerRadius, 0), radius: Radius.circular(cornerRadius));
+    // 1) 卡面基础形状：普通圆角矩形（打开动画结束态就是它）
+    final base = Path()
+      ..addRRect(RRect.fromRectAndRadius(
+        Rect.fromLTWH(0, 0, w, h),
+        Radius.circular(cornerRadius),
+      ));
+    if (fill >= 0.999) return base;
 
-    if (k <= 0.02) {
-      // 凹口已填平：普通圆角矩形（详情页头部形态）
-      path.lineTo(w - cornerRadius, 0);
-      path.arcToPoint(Offset(w, cornerRadius), radius: Radius.circular(cornerRadius));
-    } else {
-      final rf = filletRadius * k;
-      final r = notchArcRadius * k;
-      final cy = capCenterTop;            // 胶囊纵向中线（= 凹弧圆心 y）
-      final cx = w - capCenterInset;      // 胶囊圆帽圆心 x
-      final xw = w - (capCenterInset + notchArcRadius) * k; // 左侧「墙」：与胶囊左缘等距
-      final bottomY = cy + r;             // 凹口底线（= 胶囊底 + gap）
-
-      // 顶边 → 外凸圆角（与顶边、与「墙」都相切）
-      path.lineTo(xw - rf, 0);
-      path.arcToPoint(Offset(xw, rf), radius: Radius.circular(rf));
-      // 「墙」直边向下到胶囊纵向中线
-      path.lineTo(xw, cy);
-      // 内凹弧：自纵向中线起（与墙相切、切点即最左处）绕过胶囊帽下半圈到底线
-      path.arcToPoint(
+    // 2) 缺口：**形状始终不变**（凹弧半径恒为胶囊圆帽半径 + gap，胶囊效果沿用）
+    final rf = filletRadius;
+    final r = notchArcRadius;
+    final cy = capCenterTop;
+    final cx = w - capCenterInset;
+    final xw = w - (capCenterInset + notchArcRadius); // 左侧「墙」
+    final bottomY = cy + r;                           // 凹口底线
+    final notch = Path()
+      ..moveTo(xw - rf, 0)                            // 顶边结束点
+      ..arcToPoint(Offset(xw, rf), radius: Radius.circular(rf)) // 外凸圆角
+      ..lineTo(xw, cy)                                // 墙：下到胶囊纵向中线
+      ..arcToPoint(                                      // 凹弧（与胶囊同心等距）
         Offset(cx, bottomY),
         radius: Radius.circular(r),
         clockwise: false,
-      );
-      // 底线 → 右缘侧外凸圆角
-      path.lineTo(w - rf, bottomY);
-      path.arcToPoint(Offset(w, bottomY + rf), radius: Radius.circular(rf));
+      )
+      ..lineTo(w, bottomY)                            // 底线 → 右缘
+      ..lineTo(w, 0)                                  // 右缘 → 卡顶（缺口贴着右上角）
+      ..close();
+
+    if (fill <= 0.001) {
+      return Path.combine(PathOperation.difference, base, notch);
     }
 
-    path.lineTo(w, h - cornerRadius);
-    path.arcToPoint(Offset(w - cornerRadius, h), radius: Radius.circular(cornerRadius));
-    path.lineTo(cornerRadius, h);
-    path.arcToPoint(Offset(0, h - cornerRadius), radius: Radius.circular(cornerRadius));
-    path.lineTo(0, cornerRadius);
-    path.close();
-    return path;
+    // 3) 填充：自「内凹角」（墙与凹弧的切点，缺口最靠内的一点）向外扫过。
+    //    扫掠区是一个以该点为圆心的圆，半径随 fill 增大 → 材料从内凹角往外长，
+    //    没扫到的缺口部分仍保留原始轮廓（含与「查看」曲率一致的凹弧），
+    //    直到 fill=1 时整个缺口被扫掉、退化为普通圆角矩形。
+    final corner = Offset(xw, cy);
+    // 缺口里离内凹角最远的两个点：卡片右上角、凹口底边右端
+    final far = math.max(
+      (Offset(w, 0) - corner).distance,
+      (Offset(w, bottomY) - corner).distance,
+    );
+    final sweepRadius = far * fill;
+    final sweep = Path()..addOval(Rect.fromCircle(center: corner, radius: sweepRadius));
+    final remaining = Path.combine(PathOperation.difference, notch, sweep);
+    return Path.combine(PathOperation.difference, base, remaining);
   }
 
   @override

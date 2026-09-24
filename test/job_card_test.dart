@@ -176,6 +176,18 @@ void main() {
     expect(r, notchPillHeight / 2 + notchGap);
     expect(clipper.wallInset(size) - (notchPillRightInset + notchPillWidth), closeTo(notchGap, 0.01));
 
+    // 填充方式：自内凹角向外扫过 —— 半程时近处已填、远处（右上角）仍是缺口
+    const half = SmoothNotchClipper(fill: 0.5);
+    final halfPath = half.getClip(size);
+    expect(halfPath.contains(Offset(w - 84, 13)), isTrue,
+        reason: '内凹角附近（缺口内 8px 处）应已被填上');
+    expect(halfPath.contains(Offset(w - 6, 6)), isFalse,
+        reason: '远处的右上角缺口应还没填到');
+    // 缺口轮廓没被缩放：凹弧半径仍是胶囊圆帽半径 + gap，墙的位置也不变
+    expect(half.notchArcRadius, clipper.notchArcRadius, reason: '凹弧半径不随填充变化（胶囊效果沿用）');
+    expect(half.wallInset(size), clipper.wallInset(size));
+    expect(half.capCenterTop, clipper.capCenterTop);
+
     // 填平后：凹口消失、右上角变成普通圆角
     const filled = SmoothNotchClipper(fill: 1);
     final flat = filled.getClip(size);
