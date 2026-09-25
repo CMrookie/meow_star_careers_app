@@ -5,17 +5,19 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:http/http.dart' as http;
 import 'package:http/testing.dart';
 
-import 'package:just_a_work_app/app.dart';
-import 'package:just_a_work_app/core/app_config.dart';
-import 'package:just_a_work_app/services/api_client.dart';
-import 'package:just_a_work_app/state/session.dart';
-import 'package:just_a_work_app/ui/complaint_level.dart';
-import 'package:just_a_work_app/ui/profile_page.dart';
-import 'package:just_a_work_app/ui/widgets.dart';
+import 'package:meow_star_careers_app/app.dart';
+import 'package:meow_star_careers_app/core/app_config.dart';
+import 'package:meow_star_careers_app/services/api_client.dart';
+import 'package:meow_star_careers_app/state/session.dart';
+import 'package:meow_star_careers_app/ui/complaint_level.dart';
+import 'package:meow_star_careers_app/ui/profile_page.dart';
+import 'package:meow_star_careers_app/ui/widgets.dart';
 
-http.Response _json(Object body, [int code = 200]) =>
-    http.Response.bytes(utf8.encode(jsonEncode(body)), code,
-        headers: {'content-type': 'application/json; charset=utf-8'});
+http.Response _json(Object body, [int code = 200]) => http.Response.bytes(
+  utf8.encode(jsonEncode(body)),
+  code,
+  headers: {'content-type': 'application/json; charset=utf-8'},
+);
 
 void main() {
   testWidgets('未登录时展示登录页', (tester) async {
@@ -24,7 +26,9 @@ void main() {
     final session = SessionController(config: config);
     await session.init();
 
-    await tester.pumpWidget(AppScope(controller: session, child: const JustWorkApp()));
+    await tester.pumpWidget(
+      AppScope(controller: session, child: const JustWorkApp()),
+    );
     await tester.pumpAndSettle();
 
     expect(find.text('登 录'), findsOneWidget);
@@ -40,12 +44,17 @@ void main() {
     final session = SessionController(config: config);
     await session.init();
 
-    await tester.pumpWidget(AppScope(controller: session, child: const JustWorkApp()));
+    await tester.pumpWidget(
+      AppScope(controller: session, child: const JustWorkApp()),
+    );
     await tester.pumpAndSettle();
 
     await tester.tap(find.byTooltip('服务器地址'));
     await tester.pumpAndSettle();
-    expect(find.text('修改后端 base URL（例如 http://192.168.1.10:8080）'), findsOneWidget);
+    expect(
+      find.text('修改后端 base URL（例如 http://192.168.1.10:8080）'),
+      findsOneWidget,
+    );
     expect(find.text('保存'), findsOneWidget);
 
     session.dispose();
@@ -62,8 +71,14 @@ void main() {
         return _json({
           'token': 'reg-token',
           'user': {
-            'id': uuid, 'email': null, 'phone': phone, 'name': body['name'], 'isActive': true,
-            'role': 'seeker', 'createdAt': '2024-09-08T08:00:00Z', 'updatedAt': '2024-09-08T08:00:00Z',
+            'id': uuid,
+            'email': null,
+            'phone': phone,
+            'name': body['name'],
+            'isActive': true,
+            'role': 'seeker',
+            'createdAt': '2024-09-08T08:00:00Z',
+            'updatedAt': '2024-09-08T08:00:00Z',
           },
         }, 201);
       }
@@ -71,16 +86,26 @@ void main() {
       if (req.url.path.endsWith('/jobs') ||
           req.url.path.endsWith('/saved-jobs') ||
           req.url.path.endsWith('/applications')) {
-        return _json({'items': <Object>[], 'total': 0, 'page': 1, 'pageSize': 20});
+        return _json({
+          'items': <Object>[],
+          'total': 0,
+          'page': 1,
+          'pageSize': 20,
+        });
       }
       if (req.url.path.endsWith('/conversations')) return _json(<Object>[]);
       fail('unexpected ${req.method} ${req.url.path}');
     });
     final config = AppConfig(MemorySettingsStore());
-    final session = SessionController(config: config, apiClient: ApiClient(config, client: client));
+    final session = SessionController(
+      config: config,
+      apiClient: ApiClient(config, client: client),
+    );
     await session.init();
 
-    await tester.pumpWidget(AppScope(controller: session, child: const JustWorkApp()));
+    await tester.pumpWidget(
+      AppScope(controller: session, child: const JustWorkApp()),
+    );
     await tester.pumpAndSettle();
     expect(find.text('登 录'), findsOneWidget);
 
@@ -112,7 +137,9 @@ void main() {
     final session = SessionController(config: config);
     await session.init();
 
-    await tester.pumpWidget(AppScope(controller: session, child: const JustWorkApp()));
+    await tester.pumpWidget(
+      AppScope(controller: session, child: const JustWorkApp()),
+    );
     await tester.pumpAndSettle();
     expect(find.text('求职者演示账号'), findsOneWidget);
 
@@ -133,7 +160,9 @@ void main() {
   testWidgets('「我的」页内容避让设备顶部安全区', (tester) async {
     // 模拟带状态栏 / 刘海的设备：顶部安全区 47 逻辑像素
     const statusBar = 47.0;
-    tester.view.padding = FakeViewPadding(top: statusBar * tester.view.devicePixelRatio);
+    tester.view.padding = FakeViewPadding(
+      top: statusBar * tester.view.devicePixelRatio,
+    );
     addTearDown(tester.view.reset);
 
     final config = AppConfig(MemorySettingsStore());
@@ -141,7 +170,9 @@ void main() {
     final session = SessionController(config: config);
     await session.init();
 
-    await tester.pumpWidget(AppScope(controller: session, child: const JustWorkApp()));
+    await tester.pumpWidget(
+      AppScope(controller: session, child: const JustWorkApp()),
+    );
     await tester.pumpAndSettle();
 
     await tester.ensureVisible(find.text('求职者演示账号'));
@@ -154,13 +185,22 @@ void main() {
     await tester.pumpAndSettle();
 
     // 头部信息卡（头像与昵称）必须整体落在状态栏下方
-    final avatar = find.descendant(of: find.byType(ProfilePage), matching: find.byType(Avatar));
+    final avatar = find.descendant(
+      of: find.byType(ProfilePage),
+      matching: find.byType(Avatar),
+    );
     expect(avatar, findsOneWidget);
     expect(tester.getTopLeft(avatar).dy, greaterThanOrEqualTo(statusBar));
-    expect(tester.getTopLeft(find.text('演示求职者')).dy, greaterThanOrEqualTo(statusBar));
+    expect(
+      tester.getTopLeft(find.text('演示求职者')).dy,
+      greaterThanOrEqualTo(statusBar),
+    );
 
     // 页面首个功能入口同样不被遮挡
-    expect(tester.getTopLeft(find.text('我的简历')).dy, greaterThanOrEqualTo(statusBar));
+    expect(
+      tester.getTopLeft(find.text('我的简历')).dy,
+      greaterThanOrEqualTo(statusBar),
+    );
 
     session.dispose();
   });

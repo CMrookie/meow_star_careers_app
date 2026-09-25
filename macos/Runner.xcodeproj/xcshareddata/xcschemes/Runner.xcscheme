@@ -15,10 +15,9 @@
                   <BuildableReference
                      BuildableIdentifier = "primary"
                      BlueprintIdentifier = "33CC10EC2044A3C60003C045"
-                     BuildableName = "just_a_work_app.app"
+                     BuildableName = "meow_star_careers_app.app"
                      BlueprintName = "Runner"
-                     ReferencedContainer = "container:Runner.xcodeproj">
-                  </BuildableReference>
+                     ReferencedContainer = "container:Runner.xcodeproj"></BuildableReference>
                </EnvironmentBuildable>
             </ActionContent>
          </ExecutionAction>
@@ -33,10 +32,9 @@
             <BuildableReference
                BuildableIdentifier = "primary"
                BlueprintIdentifier = "33CC10EC2044A3C60003C045"
-               BuildableName = "just_a_work_app.app"
+               BuildableName = "meow_star_careers_app.app"
                BlueprintName = "Runner"
-               ReferencedContainer = "container:Runner.xcodeproj">
-            </BuildableReference>
+               ReferencedContainer = "container:Runner.xcodeproj"></BuildableReference>
          </BuildActionEntry>
       </BuildActionEntries>
    </BuildAction>
@@ -49,10 +47,9 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "33CC10EC2044A3C60003C045"
-            BuildableName = "just_a_work_app.app"
+            BuildableName = "meow_star_careers_app.app"
             BlueprintName = "Runner"
-            ReferencedContainer = "container:Runner.xcodeproj">
-         </BuildableReference>
+            ReferencedContainer = "container:Runner.xcodeproj"></BuildableReference>
       </MacroExpansion>
       <Testables>
          <TestableReference
@@ -63,8 +60,7 @@
                BlueprintIdentifier = "331C80D4294CF70F00263BE5"
                BuildableName = "RunnerTests.xctest"
                BlueprintName = "RunnerTests"
-               ReferencedContainer = "container:Runner.xcodeproj">
-            </BuildableReference>
+               ReferencedContainer = "container:Runner.xcodeproj"></BuildableReference>
          </TestableReference>
       </Testables>
    </TestAction>
@@ -84,10 +80,9 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "33CC10EC2044A3C60003C045"
-            BuildableName = "just_a_work_app.app"
+            BuildableName = "meow_star_careers_app.app"
             BlueprintName = "Runner"
-            ReferencedContainer = "container:Runner.xcodeproj">
-         </BuildableReference>
+            ReferencedContainer = "container:Runner.xcodeproj"></BuildableReference>
       </BuildableProductRunnable>
    </LaunchAction>
    <ProfileAction
@@ -101,17 +96,14 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "33CC10EC2044A3C60003C045"
-            BuildableName = "just_a_work_app.app"
+            BuildableName = "meow_star_careers_app.app"
             BlueprintName = "Runner"
-            ReferencedContainer = "container:Runner.xcodeproj">
-         </BuildableReference>
+            ReferencedContainer = "container:Runner.xcodeproj"></BuildableReference>
       </BuildableProductRunnable>
    </ProfileAction>
    <AnalyzeAction
-      buildConfiguration = "Debug">
-   </AnalyzeAction>
+      buildConfiguration = "Debug"></AnalyzeAction>
    <ArchiveAction
       buildConfiguration = "Release"
-      revealArchiveInOrganizer = "YES">
-   </ArchiveAction>
+      revealArchiveInOrganizer = "YES"></ArchiveAction>
 </Scheme>

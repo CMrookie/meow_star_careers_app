@@ -1,15 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:just_a_work_app/app.dart';
-import 'package:just_a_work_app/core/app_config.dart';
-import 'package:just_a_work_app/models/models.dart';
-import 'package:just_a_work_app/state/session.dart';
-import 'package:just_a_work_app/ui/complaint_level.dart';
-import 'package:just_a_work_app/ui/jobs/job_open_transition.dart';
-import 'package:just_a_work_app/ui/paged_list_view.dart';
-import 'package:just_a_work_app/ui/theme.dart';
-import 'package:just_a_work_app/ui/widgets.dart';
+import 'package:meow_star_careers_app/app.dart';
+import 'package:meow_star_careers_app/core/app_config.dart';
+import 'package:meow_star_careers_app/models/models.dart';
+import 'package:meow_star_careers_app/state/session.dart';
+import 'package:meow_star_careers_app/ui/complaint_level.dart';
+import 'package:meow_star_careers_app/ui/jobs/job_open_transition.dart';
+import 'package:meow_star_careers_app/ui/paged_list_view.dart';
+import 'package:meow_star_careers_app/ui/theme.dart';
+import 'package:meow_star_careers_app/ui/widgets.dart';
 
 JobView _job({
   String title = '资深 Flutter 工程师',
@@ -20,33 +20,38 @@ JobView _job({
   int? salaryMin = 25000,
   int? salaryMax = 40000,
   bool isActive = true,
-}) =>
-    JobView(
-      id: 'job-1',
-      companyId: 'company-1',
-      companyName: companyName,
-      title: title,
-      description: description,
-      location: '广东 · 深圳市',
-      salaryMin: salaryMin,
-      salaryMax: salaryMax,
-      jobType: jobType,
-      experience: '3-5 年',
-      education: '本科',
-      isActive: isActive,
-      createdAt: DateTime.now().subtract(const Duration(days: 2)),
-      updatedAt: DateTime.now(),
-      complaintCount: complaintCount,
-    );
+}) => JobView(
+  id: 'job-1',
+  companyId: 'company-1',
+  companyName: companyName,
+  title: title,
+  description: description,
+  location: '广东 · 深圳市',
+  salaryMin: salaryMin,
+  salaryMax: salaryMax,
+  jobType: jobType,
+  experience: '3-5 年',
+  education: '本科',
+  isActive: isActive,
+  createdAt: DateTime.now().subtract(const Duration(days: 2)),
+  updatedAt: DateTime.now(),
+  complaintCount: complaintCount,
+);
 
-Future<void> _pumpCard(WidgetTester tester, Widget card, {Size size = const Size(390, 844)}) async {
+Future<void> _pumpCard(
+  WidgetTester tester,
+  Widget card, {
+  Size size = const Size(390, 844),
+}) async {
   tester.view.physicalSize = size;
   tester.view.devicePixelRatio = 1.0;
   addTearDown(tester.view.reset);
-  await tester.pumpWidget(MaterialApp(
-    theme: buildTheme(),
-    home: Scaffold(body: ListView(children: [card])),
-  ));
+  await tester.pumpWidget(
+    MaterialApp(
+      theme: buildTheme(),
+      home: Scaffold(body: ListView(children: [card])),
+    ),
+  );
   await tester.pumpAndSettle();
 }
 
@@ -70,7 +75,11 @@ void main() {
     expect(clipper.filletRadius, notchFillet);
     expect(clipper.capRadius, notchPillHeight / 2);
     expect(clipper.gap, notchGap);
-    expect(clipper.notchArcRadius, notchPillHeight / 2 + notchGap, reason: '凹弧半径 = 圆帽半径 + 间距');
+    expect(
+      clipper.notchArcRadius,
+      notchPillHeight / 2 + notchGap,
+      reason: '凹弧半径 = 圆帽半径 + 间距',
+    );
     expect(clipper.cornerRadius, jobCardRadius);
     expect(clipper.fill, 0);
     expect(shape.clipBehavior, Clip.antiAlias);
@@ -79,31 +88,53 @@ void main() {
     final cardRect = tester.getRect(find.byType(PhysicalShape));
     final size = Size(cardRect.width, cardRect.height);
     final pillRect = tester.getRect(
-      find.ancestor(of: find.text('查看'), matching: find.byType(Container)).first,
+      find
+          .ancestor(of: find.text('查看'), matching: find.byType(Container))
+          .first,
     );
     expect(pillRect.right, closeTo(cardRect.right - notchPillRightInset, 0.01));
     expect(pillRect.top, closeTo(cardRect.top + notchPillTop, 0.01));
 
     // 顶边结束点 = 墙 - 外凸圆角；贴合自胶囊纵向中线开始
     final wall = clipper.wallInset(size);
-    expect(clipper.topEdgeInset(size), closeTo(wall + notchFillet, 0.01),
-        reason: '顶边结束点比「墙」再往左一个圆角半径');
-    expect(wall - (notchPillRightInset + notchPillWidth), closeTo(notchGap, 0.01),
-        reason: '胶囊左侧应留出与下方一致的间距');
+    expect(
+      clipper.topEdgeInset(size),
+      closeTo(wall + notchFillet, 0.01),
+      reason: '顶边结束点比「墙」再往左一个圆角半径',
+    );
+    expect(
+      wall - (notchPillRightInset + notchPillWidth),
+      closeTo(notchGap, 0.01),
+      reason: '胶囊左侧应留出与下方一致的间距',
+    );
 
     // 纵向中线以上是「墙」（直边），中线以下才转成贴胶囊的内凹弧
     final path = clipper.getClip(size);
     final cy = clipper.capCenterTop;
     final xw = size.width - wall;
     expect(path.contains(Offset(xw - 3, cy - 8)), isTrue, reason: '中线上方墙左侧是卡面');
-    expect(path.contains(Offset(xw + 5, cy - 8)), isFalse, reason: '中线上方墙右侧是凹口');
-    expect(path.contains(Offset(xw + 1, cy + 12)), isTrue, reason: '中线以下凹弧向右收，卡面回到墙右侧');
+    expect(
+      path.contains(Offset(xw + 5, cy - 8)),
+      isFalse,
+      reason: '中线上方墙右侧是凹口',
+    );
+    expect(
+      path.contains(Offset(xw + 1, cy + 12)),
+      isTrue,
+      reason: '中线以下凹弧向右收，卡面回到墙右侧',
+    );
     expect(path.contains(Offset(xw + 6, cy + 12)), isFalse, reason: '凹弧内侧仍是凹口');
     // 胶囊本体（圆帽圆心、右端）都在凹口内
-    expect(path.contains(Offset(size.width - clipper.capCenterInset, cy)), isFalse,
-        reason: '胶囊左端圆帽处应处于凹口内');
-    expect(path.contains(Offset(size.width - notchPillRightInset - 2, cy)), isFalse,
-        reason: '胶囊右端应处于凹口内');
+    expect(
+      path.contains(Offset(size.width - clipper.capCenterInset, cy)),
+      isFalse,
+      reason: '胶囊左端圆帽处应处于凹口内',
+    );
+    expect(
+      path.contains(Offset(size.width - notchPillRightInset - 2, cy)),
+      isFalse,
+      reason: '胶囊右端应处于凹口内',
+    );
 
     await tester.tap(find.text('资深 Flutter 工程师'));
     expect(tapped, isTrue);
@@ -126,13 +157,19 @@ void main() {
   });
 
   testWidgets('职位卡片：投诉次数 / 下架状态 / 招聘者自定义操作', (tester) async {
-    await _pumpCard(tester, JobCard(job: _job(complaintCount: 3, isActive: false)));
+    await _pumpCard(
+      tester,
+      JobCard(job: _job(complaintCount: 3, isActive: false)),
+    );
     expect(find.text('投诉 3 次 · 预警'), findsOneWidget, reason: '卡面徽标应带投诉等级');
     expect(find.text('已下架'), findsOneWidget);
 
     await _pumpCard(
       tester,
-      JobCard(job: _job(), trailing: const Icon(Icons.more_vert, color: notchPillFg)),
+      JobCard(
+        job: _job(),
+        trailing: const Icon(Icons.more_vert, color: notchPillFg),
+      ),
     );
     expect(find.byIcon(Icons.more_vert), findsOneWidget);
     expect(find.text('查看'), findsNothing);
@@ -153,12 +190,20 @@ void main() {
 
     // 1) 顶边 → 外凸圆角：顶边止于墙 - rf
     expect(path.contains(Offset(xw - rf - 4, 1)), isTrue, reason: '顶边结束点左侧是卡面');
-    expect(path.contains(Offset(xw - rf + 8, 1)), isFalse, reason: '顶边结束点之后已进入圆角');
+    expect(
+      path.contains(Offset(xw - rf + 8, 1)),
+      isFalse,
+      reason: '顶边结束点之后已进入圆角',
+    );
     // 2) 墙：纵向中线以上是竖直直边
     expect(path.contains(Offset(xw - 3, cy - 10)), isTrue, reason: '墙左侧是卡面');
     expect(path.contains(Offset(xw + 4, cy - 10)), isFalse, reason: '墙右侧是凹口');
     // 3) 纵向中线 = 贴合起点：中线以下凹弧向右收（卡面重新出现在墙右侧）
-    expect(path.contains(Offset(xw + 2, cy + 14)), isTrue, reason: '中线以下卡面回到墙右侧');
+    expect(
+      path.contains(Offset(xw + 2, cy + 14)),
+      isTrue,
+      reason: '中线以下卡面回到墙右侧',
+    );
     expect(path.contains(Offset(xw + 9, cy + 14)), isFalse, reason: '凹弧内侧仍是凹口');
     // 4) 凹弧与胶囊同心等距 → 圆帽圆心与右端都在凹口内，弧外一圈是卡面
     expect(path.contains(Offset(cx, cy)), isFalse, reason: '胶囊圆帽圆心应在凹口内');
@@ -174,17 +219,30 @@ void main() {
     // 6) 参数关系
     expect(clipper.gap, notchGap);
     expect(r, notchPillHeight / 2 + notchGap);
-    expect(clipper.wallInset(size) - (notchPillRightInset + notchPillWidth), closeTo(notchGap, 0.01));
+    expect(
+      clipper.wallInset(size) - (notchPillRightInset + notchPillWidth),
+      closeTo(notchGap, 0.01),
+    );
 
     // 填充方式：自内凹角向外扫过 —— 半程时近处已填、远处（右上角）仍是缺口
     const half = SmoothNotchClipper(fill: 0.5);
     final halfPath = half.getClip(size);
-    expect(halfPath.contains(Offset(w - 84, 13)), isTrue,
-        reason: '内凹角附近（缺口内 8px 处）应已被填上');
-    expect(halfPath.contains(Offset(w - 6, 6)), isFalse,
-        reason: '远处的右上角缺口应还没填到');
+    expect(
+      halfPath.contains(Offset(w - 84, 13)),
+      isTrue,
+      reason: '内凹角附近（缺口内 8px 处）应已被填上',
+    );
+    expect(
+      halfPath.contains(Offset(w - 6, 6)),
+      isFalse,
+      reason: '远处的右上角缺口应还没填到',
+    );
     // 缺口轮廓没被缩放：凹弧半径仍是胶囊圆帽半径 + gap，墙的位置也不变
-    expect(half.notchArcRadius, clipper.notchArcRadius, reason: '凹弧半径不随填充变化（胶囊效果沿用）');
+    expect(
+      half.notchArcRadius,
+      clipper.notchArcRadius,
+      reason: '凹弧半径不随填充变化（胶囊效果沿用）',
+    );
     expect(half.wallInset(size), clipper.wallInset(size));
     expect(half.capCenterTop, clipper.capCenterTop);
 
@@ -217,12 +275,16 @@ void main() {
     await config.store.write(complaintRuleSeenKey, '1'); // 跳过首次规则提示
     final session = SessionController(config: config);
     await session.init();
-    await tester.pumpWidget(AppScope(controller: session, child: const JustWorkApp()));
+    await tester.pumpWidget(
+      AppScope(controller: session, child: const JustWorkApp()),
+    );
     await tester.pumpAndSettle();
     await tester.tap(find.text('求职者演示账号'));
     await tester.pumpAndSettle();
 
-    final cardFinder = find.byWidgetPredicate((w) => w is JobCardSurface && w.notchFill == 0);
+    final cardFinder = find.byWidgetPredicate(
+      (w) => w is JobCardSurface && w.notchFill == 0,
+    );
     expect(cardFinder, findsWidgets);
     final cardRect = tester.getRect(cardFinder.first);
     final title = tester.widget<JobCardSurface>(cardFinder.first).job.title;
@@ -239,18 +301,28 @@ void main() {
     // 接近结束：标题的纵向位置
     await tester.pump(const Duration(milliseconds: 440));
     final nearEndDy = tester
-        .getTopLeft(find.descendant(of: find.byKey(jobFlightKey), matching: find.text(title)))
+        .getTopLeft(
+          find.descendant(
+            of: find.byKey(jobFlightKey),
+            matching: find.text(title),
+          ),
+        )
         .dy;
 
     await tester.pumpAndSettle();
     final header = find.byWidgetPredicate(
-        (w) => w is JobCardSurface && w.notchFill == 1 && w.key != jobFlightKey);
+      (w) => w is JobCardSurface && w.notchFill == 1 && w.key != jobFlightKey,
+    );
     expect(header, findsOneWidget);
     final headerRect = tester.getRect(header);
     expect(headerRect.left, 0);
     expect(headerRect.top, 0);
     expect(headerRect.width, 390);
-    expect(headerRect.height, closeTo(cardRect.height + 44, 1), reason: '头部高度 = 卡面高 + 状态栏');
+    expect(
+      headerRect.height,
+      closeTo(cardRect.height + 44, 1),
+      reason: '头部高度 = 卡面高 + 状态栏',
+    );
     final settledDy = tester
         .getTopLeft(find.descendant(of: header, matching: find.text(title)))
         .dy;
@@ -272,12 +344,16 @@ void main() {
     await config.store.write(complaintRuleSeenKey, '1'); // 跳过首次规则提示
     final session = SessionController(config: config);
     await session.init();
-    await tester.pumpWidget(AppScope(controller: session, child: const JustWorkApp()));
+    await tester.pumpWidget(
+      AppScope(controller: session, child: const JustWorkApp()),
+    );
     await tester.pumpAndSettle();
     await tester.tap(find.text('求职者演示账号'));
     await tester.pumpAndSettle();
 
-    final listCards = find.byWidgetPredicate((w) => w is JobCardSurface && w.notchFill == 0);
+    final listCards = find.byWidgetPredicate(
+      (w) => w is JobCardSurface && w.notchFill == 0,
+    );
     await tester.tap(listCards.first);
     await tester.pumpAndSettle();
 
@@ -286,28 +362,50 @@ void main() {
     expect(backIcon, findsWidgets);
     final backRect = tester.getRect(backIcon.first);
     final header = find.byWidgetPredicate(
-        (w) => w is JobCardSurface && w.notchFill == 1 && w.key != jobFlightKey);
-    final logoRect = tester.getRect(find.descendant(of: header, matching: find.byType(Container)).first);
-    expect(backRect.bottom, lessThanOrEqualTo(logoRect.top + 2), reason: '返回按钮应在头部内容上方');
+      (w) => w is JobCardSurface && w.notchFill == 1 && w.key != jobFlightKey,
+    );
+    final logoRect = tester.getRect(
+      find.descendant(of: header, matching: find.byType(Container)).first,
+    );
+    expect(
+      backRect.bottom,
+      lessThanOrEqualTo(logoRect.top + 2),
+      reason: '返回按钮应在头部内容上方',
+    );
     expect(backRect.left, greaterThanOrEqualTo(0));
     expect(backRect.top, greaterThanOrEqualTo(0));
 
     // 按钮可点：点击后回到列表页
     await tester.tap(backIcon.first);
     await tester.pumpAndSettle();
-    expect(find.byWidgetPredicate((w) => w is JobCardSurface && w.notchFill == 1 && w.key != jobFlightKey), findsNothing);
+    expect(
+      find.byWidgetPredicate(
+        (w) => w is JobCardSurface && w.notchFill == 1 && w.key != jobFlightKey,
+      ),
+      findsNothing,
+    );
 
     // 2) 左缘侧滑返回
     await tester.tap(listCards.first);
     await tester.pumpAndSettle();
-    expect(find.byWidgetPredicate((w) => w is JobCardSurface && w.notchFill == 1 && w.key != jobFlightKey), findsOneWidget);
+    expect(
+      find.byWidgetPredicate(
+        (w) => w is JobCardSurface && w.notchFill == 1 && w.key != jobFlightKey,
+      ),
+      findsOneWidget,
+    );
     final g = await tester.startGesture(const Offset(2, 400));
     await g.moveBy(const Offset(260, 0));
     await tester.pump();
     await g.up();
     await tester.pumpAndSettle();
-    expect(find.byWidgetPredicate((w) => w is JobCardSurface && w.notchFill == 1 && w.key != jobFlightKey), findsNothing,
-        reason: '左缘侧滑应返回列表页');
+    expect(
+      find.byWidgetPredicate(
+        (w) => w is JobCardSurface && w.notchFill == 1 && w.key != jobFlightKey,
+      ),
+      findsNothing,
+      reason: '左缘侧滑应返回列表页',
+    );
 
     session.dispose();
   });
@@ -322,13 +420,16 @@ void main() {
     await config.store.write(complaintRuleSeenKey, '1'); // 跳过首次规则提示
     final session = SessionController(config: config);
     await session.init();
-    await tester.pumpWidget(AppScope(controller: session, child: const JustWorkApp()));
+    await tester.pumpWidget(
+      AppScope(controller: session, child: const JustWorkApp()),
+    );
     await tester.pumpAndSettle();
     await tester.tap(find.text('求职者演示账号'));
     await tester.pumpAndSettle();
 
     final header = find.byWidgetPredicate(
-        (w) => w is JobCardSurface && w.notchFill == 1 && w.key != jobFlightKey);
+      (w) => w is JobCardSurface && w.notchFill == 1 && w.key != jobFlightKey,
+    );
     expect(header, findsNothing);
 
     // 列表里每张卡都有一个「查看」胶囊，点它应当打开对应的详情页

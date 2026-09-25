@@ -1,21 +1,15 @@
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:just_a_work_app/ui/jobs/job_edit_page.dart';
+import 'package:meow_star_careers_app/ui/jobs/job_edit_page.dart';
 
 void main() {
   group('职位学历一致性校验', () {
     test('内容无学历表述 -> 通过', () {
-      expect(
-        educationConsistencyHint('本科', ['负责核心系统开发', '熟悉常见框架']),
-        isNull,
-      );
+      expect(educationConsistencyHint('本科', ['负责核心系统开发', '熟悉常见框架']), isNull);
     });
 
     test('内容与所选一致 -> 通过', () {
-      expect(
-        educationConsistencyHint('本科', ['要求本科及以上学历', '负责产品研发']),
-        isNull,
-      );
+      expect(educationConsistencyHint('本科', ['要求本科及以上学历', '负责产品研发']), isNull);
     });
 
     test('内容提及其他学历 -> 拦截', () {

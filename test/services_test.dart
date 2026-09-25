@@ -4,20 +4,22 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:http/http.dart' as http;
 import 'package:http/testing.dart';
 
-import 'package:just_a_work_app/core/api_exception.dart';
-import 'package:just_a_work_app/core/app_config.dart';
-import 'package:just_a_work_app/models/models.dart';
-import 'package:just_a_work_app/services/api_client.dart';
-import 'package:just_a_work_app/services/api_services.dart';
-import 'package:just_a_work_app/services/auth_service.dart';
-import 'package:just_a_work_app/services/chat_service.dart';
+import 'package:meow_star_careers_app/core/api_exception.dart';
+import 'package:meow_star_careers_app/core/app_config.dart';
+import 'package:meow_star_careers_app/models/models.dart';
+import 'package:meow_star_careers_app/services/api_client.dart';
+import 'package:meow_star_careers_app/services/api_services.dart';
+import 'package:meow_star_careers_app/services/auth_service.dart';
+import 'package:meow_star_careers_app/services/chat_service.dart';
 
 const _uuid1 = '11111111-1111-1111-1111-111111111111';
 const _uuid2 = '22222222-2222-2222-2222-222222222222';
 
-http.Response _json(Object body, [int code = 200]) =>
-    http.Response.bytes(utf8.encode(jsonEncode(body)), code,
-        headers: {'content-type': 'application/json; charset=utf-8'});
+http.Response _json(Object body, [int code = 200]) => http.Response.bytes(
+  utf8.encode(jsonEncode(body)),
+  code,
+  headers: {'content-type': 'application/json; charset=utf-8'},
+);
 
 void main() {
   late AppConfig config;
@@ -41,9 +43,15 @@ void main() {
         return _json({
           'token': 'tok',
           'user': {
-            'id': _uuid1, 'email': null, 'phone': phone, 'name': 'HR', 'isActive': true,
-            'role': 'recruiter', 'companyId': _uuid2,
-            'createdAt': '2024-09-08T08:00:00Z', 'updatedAt': '2024-09-08T08:00:00Z',
+            'id': _uuid1,
+            'email': null,
+            'phone': phone,
+            'name': 'HR',
+            'isActive': true,
+            'role': 'recruiter',
+            'companyId': _uuid2,
+            'createdAt': '2024-09-08T08:00:00Z',
+            'updatedAt': '2024-09-08T08:00:00Z',
           },
         }, 201);
       });
@@ -71,8 +79,14 @@ void main() {
         return _json({
           'token': 'tok-2',
           'user': {
-            'id': _uuid1, 'email': null, 'phone': phone, 'name': 'A', 'isActive': true,
-            'role': 'seeker', 'createdAt': '2024-09-08T08:00:00Z', 'updatedAt': '2024-09-08T08:00:00Z',
+            'id': _uuid1,
+            'email': null,
+            'phone': phone,
+            'name': 'A',
+            'isActive': true,
+            'role': 'seeker',
+            'createdAt': '2024-09-08T08:00:00Z',
+            'updatedAt': '2024-09-08T08:00:00Z',
           },
         });
       });
@@ -89,10 +103,12 @@ void main() {
       final auth = AuthService(ApiClient(config, client: client));
       await expectLater(
         auth.me('bad'),
-        throwsA(isA<ApiException>()
-            .having((e) => e.statusCode, 'statusCode', 401)
-            .having((e) => e.code, 'code', 'unauthorized')
-            .having((e) => e.message, 'message', '无效或已过期的 token')),
+        throwsA(
+          isA<ApiException>()
+              .having((e) => e.statusCode, 'statusCode', 401)
+              .having((e) => e.code, 'code', 'unauthorized')
+              .having((e) => e.message, 'message', '无效或已过期的 token'),
+        ),
       );
     });
   });
@@ -107,17 +123,29 @@ void main() {
         return _json({
           'items': [
             {
-              'id': _uuid1, 'companyId': _uuid2, 'companyName': '星河科技',
-              'title': '后端工程师', 'description': 'x', 'jobType': 'full_time',
+              'id': _uuid1,
+              'companyId': _uuid2,
+              'companyName': '星河科技',
+              'title': '后端工程师',
+              'description': 'x',
+              'jobType': 'full_time',
               'isActive': true,
-              'createdAt': '2024-09-08T08:00:00Z', 'updatedAt': '2024-09-08T08:00:00Z',
-            }
+              'createdAt': '2024-09-08T08:00:00Z',
+              'updatedAt': '2024-09-08T08:00:00Z',
+            },
           ],
-          'total': 1, 'page': 1, 'pageSize': 20,
+          'total': 1,
+          'page': 1,
+          'pageSize': 20,
         });
       });
       final api = ApiServices(ApiClient(config, client: client));
-      final page = await api.searchJobs(config.token!, keyword: '后端', location: '北京', page: 1);
+      final page = await api.searchJobs(
+        config.token!,
+        keyword: '后端',
+        location: '北京',
+        page: 1,
+      );
       expect(captured.path, '/api/v1/jobs');
       expect(captured.queryParameters['keyword'], '后端');
       expect(captured.queryParameters['location'], '北京');
@@ -134,25 +162,44 @@ void main() {
           expect(body['resumeId'], _uuid1);
           expect(body['coverLetter'], '你好');
           return _json({
-            'id': 'a1', 'jobId': _uuid1, 'jobTitle': '后端', 'companyId': _uuid2,
-            'companyName': '星河科技', 'seekerId': _uuid1, 'seekerName': '张三',
-            'seekerEmail': 'z@x.com', 'status': 'pending',
-            'createdAt': '2024-09-08T08:00:00Z', 'updatedAt': '2024-09-08T08:00:00Z',
+            'id': 'a1',
+            'jobId': _uuid1,
+            'jobTitle': '后端',
+            'companyId': _uuid2,
+            'companyName': '星河科技',
+            'seekerId': _uuid1,
+            'seekerName': '张三',
+            'seekerEmail': 'z@x.com',
+            'status': 'pending',
+            'createdAt': '2024-09-08T08:00:00Z',
+            'updatedAt': '2024-09-08T08:00:00Z',
           }, 201);
         }
         if (req.url.path.endsWith('/status')) {
           expect(jsonDecode(req.body), {'status': 'interviewing'});
           return _json({
-            'id': 'a1', 'jobId': _uuid1, 'jobTitle': '后端', 'companyId': _uuid2,
-            'companyName': '星河科技', 'seekerId': _uuid1, 'seekerName': '张三',
-            'seekerEmail': 'z@x.com', 'status': 'interviewing',
-            'createdAt': '2024-09-08T08:00:00Z', 'updatedAt': '2024-09-08T08:00:00Z',
+            'id': 'a1',
+            'jobId': _uuid1,
+            'jobTitle': '后端',
+            'companyId': _uuid2,
+            'companyName': '星河科技',
+            'seekerId': _uuid1,
+            'seekerName': '张三',
+            'seekerEmail': 'z@x.com',
+            'status': 'interviewing',
+            'createdAt': '2024-09-08T08:00:00Z',
+            'updatedAt': '2024-09-08T08:00:00Z',
           });
         }
         fail('unexpected path ${req.url.path}');
       });
       final api = ApiServices(ApiClient(config, client: client));
-      final app = await api.applyJob(_uuid1, config.token!, resumeId: _uuid1, coverLetter: '你好');
+      final app = await api.applyJob(
+        _uuid1,
+        config.token!,
+        resumeId: _uuid1,
+        coverLetter: '你好',
+      );
       expect(app.status, 'pending');
       await api.setApplicationStatus('a1', 'interviewing', config.token!);
     });
@@ -161,10 +208,16 @@ void main() {
       final client = MockClient((req) async {
         return _json([
           {
-            'id': _uuid1, 'userId': _uuid2, 'fullName': '张三', 'title': 'Flutter 工程师',
-            'years': 3, 'education': '本科', 'isPublic': true,
-            'createdAt': '2024-09-08T08:00:00Z', 'updatedAt': '2024-09-08T08:00:00Z',
-          }
+            'id': _uuid1,
+            'userId': _uuid2,
+            'fullName': '张三',
+            'title': 'Flutter 工程师',
+            'years': 3,
+            'education': '本科',
+            'isPublic': true,
+            'createdAt': '2024-09-08T08:00:00Z',
+            'updatedAt': '2024-09-08T08:00:00Z',
+          },
         ]);
       });
       final api = ApiServices(ApiClient(config, client: client));
@@ -181,13 +234,23 @@ void main() {
         captured = req.url;
         return _json([
           {
-            'id': 9, 'conversationId': 'c1', 'senderId': 'p1', 'recipientId': 'me',
-            'content': 'hi', 'createdAt': '2024-09-08T08:00:00Z', 'readAt': null,
-          }
+            'id': 9,
+            'conversationId': 'c1',
+            'senderId': 'p1',
+            'recipientId': 'me',
+            'content': 'hi',
+            'createdAt': '2024-09-08T08:00:00Z',
+            'readAt': null,
+          },
         ]);
       });
       final chat = ChatService(ApiClient(config, client: client));
-      final msgs = await chat.messages('c1', config.token!, limit: 50, before: 100);
+      final msgs = await chat.messages(
+        'c1',
+        config.token!,
+        limit: 50,
+        before: 100,
+      );
       expect(captured.path, '/api/v1/conversations/c1/messages');
       expect(captured.queryParameters['before'], '100');
       expect(captured.queryParameters['limit'], '50');
@@ -197,13 +260,23 @@ void main() {
 
   group('ApiServices interviews', () {
     Map<String, dynamic> ivJson(String status) => {
-          'id': 'iv1', 'applicationId': 'a1', 'jobId': 'j1', 'jobTitle': '后端工程师（Go）',
-          'companyId': 'c1', 'companyName': '星河科技',
-          'interviewerId': _uuid1, 'interviewerName': 'HR',
-          'intervieweeId': _uuid2, 'intervieweeName': '张三',
-          'status': status, 'scheduledAt': null, 'startedAt': null, 'endedAt': null,
-          'createdAt': '2025-01-18T08:00:00Z', 'updatedAt': '2025-01-18T08:00:00Z',
-        };
+      'id': 'iv1',
+      'applicationId': 'a1',
+      'jobId': 'j1',
+      'jobTitle': '后端工程师（Go）',
+      'companyId': 'c1',
+      'companyName': '星河科技',
+      'interviewerId': _uuid1,
+      'interviewerName': 'HR',
+      'intervieweeId': _uuid2,
+      'intervieweeName': '张三',
+      'status': status,
+      'scheduledAt': null,
+      'startedAt': null,
+      'endedAt': null,
+      'createdAt': '2025-01-18T08:00:00Z',
+      'updatedAt': '2025-01-18T08:00:00Z',
+    };
 
     test('createInterview 请求体（预约时间 UTC）', () async {
       late Map<String, dynamic> body;
@@ -237,9 +310,18 @@ void main() {
         fail('unexpected ${req.method} ${req.url.path}');
       });
       final api = ApiServices(ApiClient(config, client: client));
-      expect((await api.startInterview('iv1', config.token!)).status, 'in_progress');
-      expect((await api.finishInterview('iv1', config.token!)).status, 'finished');
-      expect((await api.cancelInterview('iv1', config.token!)).status, 'cancelled');
+      expect(
+        (await api.startInterview('iv1', config.token!)).status,
+        'in_progress',
+      );
+      expect(
+        (await api.finishInterview('iv1', config.token!)).status,
+        'finished',
+      );
+      expect(
+        (await api.cancelInterview('iv1', config.token!)).status,
+        'cancelled',
+      );
     });
   });
 }

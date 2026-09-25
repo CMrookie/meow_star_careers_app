@@ -1,7 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:just_a_work_app/core/format.dart';
-import 'package:just_a_work_app/models/models.dart';
+import 'package:meow_star_careers_app/core/format.dart';
+import 'package:meow_star_careers_app/models/models.dart';
 
 void main() {
   group('模型 JSON 解析（与后端 camelCase 字段对齐）', () {
@@ -81,7 +81,7 @@ void main() {
             'isActive': true,
             'createdAt': '2024-09-08T08:00:00Z',
             'updatedAt': '2024-09-08T08:00:00Z',
-          }
+          },
         ],
         'total': 1,
         'page': 1,
@@ -116,7 +116,7 @@ void main() {
     test('会话与消息解析（含空 lastMessage）', () {
       final conv = ConversationSummary.fromJson({
         'id': 'c1',
-        'peer': {'id': 'p1', 'name': 'HR'}, 
+        'peer': {'id': 'p1', 'name': 'HR'},
         'createdAt': '2024-09-08T08:00:00Z',
         'updatedAt': '2024-09-08T09:00:00Z',
         'lastMessage': null,

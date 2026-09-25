@@ -5,7 +5,7 @@ plugins {
 }
 
 android {
-    namespace = "com.example.just_a_work_app"
+    namespace = "com.example.meow_star_careers_app"
     compileSdk = flutter.compileSdkVersion
     ndkVersion = flutter.ndkVersion
 
@@ -16,7 +16,7 @@ android {
 
     defaultConfig {
         // TODO: Specify your own unique Application ID (https://developer.android.com/studio/build/application-id.html).
-        applicationId = "com.example.just_a_work_app"
+        applicationId = "com.example.meow_star_careers_app"
         // You can update the following values to match your application needs.
         // For more information, see: https://flutter.dev/to/review-gradle-config.
         // flutter_webrtc 要求 minSdk >= 23
