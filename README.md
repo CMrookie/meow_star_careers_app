@@ -1,9 +1,9 @@
-# 职聘 · 求职招聘客户端（Flutter）
+# meow_star_careers_app · 求职招聘移动端（Flutter）
 
-对接 [just-a-work](https://github.com/ 占位) 招聘求职系统服务端（Rust + PostgreSQL）的全功能移动客户端：
+对接 [meow-star-careers](https://github.com/CMrookie/meow-star-careers) 招聘求职系统服务端（Rust + actix-web + PostgreSQL）的全功能移动客户端：
 **中文界面、求职者 / 招聘者双角色**。
 
-> 对应后端仓库：`../just-a-work`（actix-web，`http://127.0.0.1:8080`，`/swagger-ui/` 有交互式 API 文档）。
+> **相关仓库**：[服务端](https://github.com/CMrookie/meow-star-careers) ｜ [后台管理系统](https://github.com/CMrookie/meow-star-careers-admin)　（本地开发时后端仓库目录为 `../just-a-work`，默认 `http://127.0.0.1:8080`，`/swagger-ui/` 有交互式 API 文档）
 > UI 遵循 **Material 3**（useMaterial3 + ColorScheme.fromSeed 派生语义色），底部导航用 NavigationBar。
 
 ### 视觉规范（`lib/ui/theme.dart` 统一提供设计令牌）
@@ -103,3 +103,14 @@ test/        模型、服务(经 MockClient 校验请求体/鉴权头/参数)、
 - 投递列表接口按角色返回：求职者看到自己的，招聘者看到本企业的（同一 `GET /applications`）。
 - 聊天消息历史按 `limit/before` 游标倒序分页；实时消息以「消息 id」在 UI 层去重。
 - 应用名「职聘」，Android label / iOS DisplayName 已同步修改。
+
+---
+
+## 相关仓库
+
+这是三端招聘平台的其中一端，另外两端：
+
+- **服务端（Rust + actix-web + PostgreSQL）**：[GitHub](https://github.com/CMrookie/meow-star-careers) ｜ [Gitee](https://gitee.com/rookie_c/meow-star-careers)
+- **后台管理系统（Vue3 + TypeScript）**：[GitHub](https://github.com/CMrookie/meow-star-careers-admin) ｜ [Gitee](https://gitee.com/rookie_c/meow-star-careers-admin)
+
+> 三端共用一套接口契约与角色模型（seeker / recruiter / reviewer / admin），由 OpenAPI 定义。
