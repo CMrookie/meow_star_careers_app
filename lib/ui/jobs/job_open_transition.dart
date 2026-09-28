@@ -63,7 +63,7 @@ class JobDetailRoute extends PageRouteBuilder<void> {
     final t = Curves.easeOutCubic.transform(animation.value);
     final to = targetRectFor(context, from);
     final rect = Rect.lerp(from, to, t)!;
-    final accent = jobAccentColor(job.jobType, job.complaintCount);
+    final accent = jobAccentColor(job.complaintCount);
     final topPad = to.height - from.height;
     return _EdgeSwipeBack(
       controller: controller!,
@@ -83,6 +83,7 @@ class JobDetailRoute extends PageRouteBuilder<void> {
                 key: jobFlightKey,
                 job: job,
                 accent: accent,
+                accentDeep: jobAccentDeep(job.complaintCount),
                 topInset: topPad * t,
                 notchFill: t,
               ),

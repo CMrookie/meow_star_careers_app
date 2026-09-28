@@ -104,20 +104,13 @@ const notchPillFg = Color(0xFF1A2B6B);
 
 // ---------- 职位卡片配色 ----------
 
-/// 职位卡片主色：按用工类型区分色相（全职=品牌蓝 / 兼职=橙 / 项目合同=紫 / 实习=绿），
-/// 投诉次数只做轻微降饱和（最多 35%），避免卡片失去彩色观感；
-/// 「投诉 N 次」的信息由卡片上的警示胶囊承担。
-Color jobAccentColor(String jobType, int complaintCount) {
-  final base = switch (jobType) {
-    'part_time' => warmOrange,
-    'contract' => accentViolet,
-    'intern' => accentGreen,
-    _ => brandColor,
-  };
-  // 用投诉等级的降饱和系数（等级越高越"暗"）
-  final dim = complaintLevelOf(complaintCount).dimFactor;
-  return Color.lerp(base, const Color(0xFF5B6474), dim)!;
-}
+/// 职位卡片主色：**按投诉等级取色系**（优劣一眼可辨）
+/// 优秀=绿系 / 轻微=蓝系 / 预警=琥珀系 / 警告=橙红系 / 严重=红系。
+/// 用工类型（全职、兼职、项目、实习）与远程等分类不再影响颜色，改为卡内标签标识。
+Color jobAccentColor(int complaintCount) => complaintLevelOf(complaintCount).surface;
+
+/// 卡面渐变的深色端
+Color jobAccentDeep(int complaintCount) => complaintLevelOf(complaintCount).surfaceDeep;
 
 ThemeData buildTheme() {
   final scheme = ColorScheme.fromSeed(

@@ -51,11 +51,11 @@ void main() {
         greaterThanOrEqualTo(ComplaintLevel.values[i - 1].dimFactor),
       );
     }
-    // 卡面主色：投诉越多越暗
-    expect(
-      jobAccentColor('full_time', 20).computeLuminance(),
-      lessThan(jobAccentColor('full_time', 0).computeLuminance()),
-    );
+    // 卡面主色：按等级取色系（优劣一眼可辨），五档互不相同
+    for (final level in ComplaintLevel.values) {
+      expect(jobAccentColor(complaintLevelThresholds[level.index]), level.surface);
+    }
+    expect(ComplaintLevel.values.map((l) => l.surface).toSet().length, 5);
   });
 
   testWidgets('规则页展示五个等级与定级依据', (tester) async {

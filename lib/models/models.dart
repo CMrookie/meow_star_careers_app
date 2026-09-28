@@ -185,6 +185,16 @@ class JobView {
 
   String get typeLabel => jobTypeLabel(jobType);
 
+  /// 是否远程岗位：数据模型暂无独立字段，先按地区/描述/要求文本里的关键词识别。
+  /// 后端补上 remote 字段后应改为直接读取该字段。
+  bool get isRemote {
+    final blob = '${location ?? ''} $description ${requirements ?? ''}'.toLowerCase();
+    return blob.contains('远程') ||
+        blob.contains('remote') ||
+        blob.contains('居家') ||
+        blob.contains('在家办公');
+  }
+
   factory JobView.fromJson(Map<String, dynamic> j) => JobView(
         id: j['id'] as String,
         companyId: j['companyId'] as String,

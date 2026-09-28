@@ -76,6 +76,24 @@ extension ComplaintLevelX on ComplaintLevel {
         ComplaintLevel.severe => 0.35,
       };
 
+  /// 卡面主色（色系）：用色系表达优劣 —— 绿=优秀、蓝=轻微、琥珀=预警、橙红=警告、红=严重
+  Color get surface => switch (this) {
+        ComplaintLevel.excellent => const Color(0xFF12B76A), // 绿系
+        ComplaintLevel.minor => const Color(0xFF3E7BFA), // 蓝系
+        ComplaintLevel.alert => const Color(0xFFF59E0B), // 琥珀/橙黄系
+        ComplaintLevel.warning => const Color(0xFFEA580C), // 橙红系
+        ComplaintLevel.severe => const Color(0xFFD92D20), // 红系
+      };
+
+  /// 色系的深色端（卡面渐变用）
+  Color get surfaceDeep => switch (this) {
+        ComplaintLevel.excellent => const Color(0xFF0B8F52),
+        ComplaintLevel.minor => const Color(0xFF2A5BD7),
+        ComplaintLevel.alert => const Color(0xFFC97A06),
+        ComplaintLevel.warning => const Color(0xFFBE4409),
+        ComplaintLevel.severe => const Color(0xFFB01F17),
+      };
+
   /// 卡面/底部提示用的短语
   String badge(int complaints) =>
       this == ComplaintLevel.excellent ? '无投诉 · 优秀' : '投诉 $complaints 次 · $label';

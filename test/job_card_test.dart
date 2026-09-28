@@ -253,16 +253,29 @@ void main() {
     expect(flat.contains(Offset(w - 4, 4)), isFalse, reason: '填平后右上角是圆角');
   });
 
-  test('职位卡片主色：按用工类型区分色相，投诉越多越暗淡', () {
-    expect(jobAccentColor('full_time', 0), brandColor);
-    expect(jobAccentColor('part_time', 0), warmOrange);
-    expect(jobAccentColor('contract', 0), accentViolet);
-    expect(jobAccentColor('intern', 0), accentGreen);
+  test('职位卡片主色：按投诉等级取色系（优劣一眼可辨），不再看用工类型', () {
+    // 优秀=绿系 / 轻微=蓝系 / 预警=琥珀系 / 警告=橙红系 / 严重=红系
+    expect(jobAccentColor(0), ComplaintLevel.excellent.surface);
+    expect(jobAccentColor(2), ComplaintLevel.minor.surface);
+    expect(jobAccentColor(3), ComplaintLevel.alert.surface);
+    expect(jobAccentColor(6), ComplaintLevel.warning.surface);
+    expect(jobAccentColor(20), ComplaintLevel.severe.surface);
 
-    final clean = jobAccentColor('full_time', 0);
-    final complained = jobAccentColor('full_time', 10);
-    expect(complained, isNot(clean));
-    expect(complained.computeLuminance(), lessThan(clean.computeLuminance()));
+    // 色系随等级推进：绿色通道递减、红色通道递增（绿 → 红）
+    int r(int c) => (jobAccentColor(c).r * 255).round();
+    int g(int c) => (jobAccentColor(c).g * 255).round();
+    expect(r(0), lessThan(r(20)));
+    expect(g(0), greaterThan(g(20)));
+
+    // 五档卡面颜色互不相同；深浅两端也各不相同
+    expect(ComplaintLevel.values.map((l) => l.surface).toSet().length, 5);
+    expect(ComplaintLevel.values.map((l) => l.surfaceDeep).toSet().length, 5);
+
+    // 用工类型不再影响颜色：同一投诉次数下，全职/兼职/项目/实习取色相同
+    for (final type in const ['full_time', 'part_time', 'contract', 'intern']) {
+      expect(jobAccentColor(3), ComplaintLevel.alert.surface,
+          reason: '$type 的卡面色也只由投诉等级决定');
+    }
   });
 
   testWidgets('打开动画：飞行层首尾与卡片/详情页头部严丝合缝（无跳动）', (tester) async {

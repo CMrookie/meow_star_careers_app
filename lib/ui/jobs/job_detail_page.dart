@@ -292,7 +292,8 @@ class _JobDetailPageState extends State<JobDetailPage> {
     final isSeeker = AppScope.of(context).user?.isSeeker ?? true;
     final header = JobCardSurface(
       job: job,
-      accent: jobAccentColor(job.jobType, job.complaintCount),
+      accent: jobAccentColor(job.complaintCount),
+      accentDeep: jobAccentDeep(job.complaintCount),
       topInset: topPad,
       notchFill: 1, // 缺口填平
     );

@@ -213,6 +213,9 @@ class JobCardSurface extends StatelessWidget {
   final JobView job;
   final Color accent;
 
+  /// 色系深色端（卡面渐变用）；为空则按 accent 自动压暗
+  final Color? accentDeep;
+
   /// 顶部额外内边距（详情页头部让开状态栏）
   final double topInset;
 
@@ -228,6 +231,7 @@ class JobCardSurface extends StatelessWidget {
     super.key,
     required this.job,
     required this.accent,
+    this.accentDeep,
     this.topInset = 0,
     this.notchFill = 0,
     this.trailing,
@@ -242,9 +246,11 @@ class JobCardSurface extends StatelessWidget {
       if (job.complaintCount > 0)
         _ComplaintBadge(complaints: job.complaintCount),
       if (!job.isActive) GlassPill('已下架', icon: Icons.visibility_off_outlined, backgroundAlpha: 0.30),
+      // 分类标签：用工类型（全职/兼职/项目/实习）与远程，均以标签形式标识
+      GlassPill(job.typeLabel, icon: Icons.access_time, backgroundAlpha: 0.34),
+      if (job.isRemote) GlassPill('远程', icon: Icons.public, backgroundAlpha: 0.34),
       if (job.location != null && job.location!.isNotEmpty)
         GlassPill(job.location!, icon: Icons.location_on_outlined),
-      GlassPill(job.typeLabel, icon: Icons.access_time),
       if (job.experience != null && job.experience!.isNotEmpty)
         GlassPill(job.experience!, icon: Icons.work_outline),
       if (job.education != null && job.education!.isNotEmpty)
@@ -262,8 +268,17 @@ class JobCardSurface extends StatelessWidget {
           shadowColor: accent.withValues(alpha: 0.35),
           // 默认是 Clip.none，不裁剪会让白色薪资栏溢出、底部圆角丢失
           clipBehavior: Clip.antiAlias,
-          child: ColoredBox(
-            color: accent,
+          child: DecoratedBox(
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [
+                  accent,
+                  accentDeep ?? Color.lerp(accent, Colors.black, 0.16)!,
+                ],
+              ),
+            ),
             child: Material(
               color: Colors.transparent,
               child: InkWell(
@@ -440,7 +455,7 @@ class JobCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final accent = jobAccentColor(job.jobType, job.complaintCount);
+    final accent = jobAccentColor(job.complaintCount);
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 12),
       child: Opacity(
@@ -449,6 +464,7 @@ class JobCard extends StatelessWidget {
           builder: (cardContext) => JobCardSurface(
             job: job,
             accent: accent,
+            accentDeep: jobAccentDeep(job.complaintCount),
             trailing: trailing,
             onTap: onTap ?? () => openJobDetailFrom(cardContext, job, onClosed: onClosed),
           ),
