@@ -37,6 +37,11 @@ class AppConfig {
   /// 登录令牌（仅内存缓存；持久化由外部经 [store] 完成）
   String? token;
 
+  /// 自建 TURN（如阿里云 ECS 上的 coturn）；为空表示只用公共 STUN
+  String? turnUrl;
+  String? turnUser;
+  String? turnCred;
+
   AppConfig(this.store, {String? baseUrl, this.token})
       : baseUrl = baseUrl ?? AppConfig.defaultBaseUrl;
 
@@ -45,6 +50,9 @@ class AppConfig {
   Future<void> load() async {
     baseUrl = await store.read('baseUrl') ?? AppConfig.defaultBaseUrl;
     token = await store.read('token');
+    turnUrl = await store.read('turnUrl');
+    turnUser = await store.read('turnUser');
+    turnCred = await store.read('turnCred');
   }
 
   Future<void> saveBaseUrl(String url) async {

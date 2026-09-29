@@ -6,6 +6,7 @@ import 'package:flutter_webrtc/flutter_webrtc.dart';
 import '../../core/app_config.dart';
 import '../../models/models.dart';
 import '../../services/realtime_chat.dart';
+import '../../core/ice_config.dart';
 import '../../state/session.dart';
 import '../widgets.dart';
 
@@ -130,11 +131,14 @@ class _InterviewRoomPageState extends State<InterviewRoomPage> {
   Future<RTCPeerConnection> _ensurePeer() async {
     var pc = _pc;
     if (pc != null) return pc;
+    // 大陆可直连的公共 STUN（原 Google STUN 墙内不可达）；如配置了自建 TURN 会自动带上
+    final cfg = AppScope.read(context).config;
     pc = await createPeerConnection({
-      'iceServers': [
-        {'urls': 'stun:stun.l.google.com:19302'},
-        {'urls': 'stun:stun1.l.google.com:19302'},
-      ],
+      'iceServers': buildIceServers(
+        turnUrl: cfg.turnUrl,
+        turnUser: cfg.turnUser,
+        turnCred: cfg.turnCred,
+      ),
     });
     _pc = pc;
 
