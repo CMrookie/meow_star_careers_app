@@ -6,6 +6,7 @@ import '../../models/models.dart';
 import '../../state/session.dart';
 import '../chat/chat_page.dart';
 import '../resumes/resume_edit_page.dart';
+import '../complaint_level.dart';
 import '../paged_list_view.dart';
 import '../theme.dart';
 import '../widgets.dart';
@@ -290,10 +291,13 @@ class _JobDetailPageState extends State<JobDetailPage> {
 
   Widget _buildBody(JobView job, double topPad) {
     final isSeeker = AppScope.of(context).user?.isSeeker ?? true;
+    final level = assessmentForJob(job).level; // 服务端等级优先
     final header = JobCardSurface(
       job: job,
-      accent: jobAccentColor(job.complaintCount),
-      accentDeep: jobAccentDeep(job.complaintCount),
+      accent: jobAccentColor(job.complaintCount,
+          staffSize: job.companyStaffSize, level: level),
+      accentDeep: jobAccentDeep(job.complaintCount,
+          staffSize: job.companyStaffSize, level: level),
       topInset: topPad,
       notchFill: 1, // 缺口填平
     );

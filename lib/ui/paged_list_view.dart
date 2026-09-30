@@ -194,13 +194,15 @@ class PagedListViewState<T> extends State<PagedListView<T>> {
 /// 职位列表统一排序：投诉等级由优到劣（优秀 → 严重），
 /// 同级按次数由少到多，最后按发布时间由新到旧。
 int compareJobsByComplaintLevel(JobView a, JobView b) {
-  final ka = jobSortKey(a.complaintCount, a.createdAt);
-  final kb = jobSortKey(b.complaintCount, b.createdAt);
-  final c0 = ka.$1.compareTo(kb.$1);
+  final ka = jobSortKeyForJob(a);
+  final kb = jobSortKeyForJob(b);
+  final c0 = ka.$1.compareTo(kb.$1); // 等级（由优到劣）
   if (c0 != 0) return c0;
-  final c1 = ka.$2.compareTo(kb.$2);
+  final c1 = ka.$2.compareTo(kb.$2); // 同等级：有规模折算的排前面
   if (c1 != 0) return c1;
-  return ka.$3.compareTo(kb.$3);
+  final c2 = ka.$3.compareTo(kb.$3); // 率 / 次数由小到大
+  if (c2 != 0) return c2;
+  return ka.$4.compareTo(kb.$4); // 发布时间由新到旧
 }
 
 /// 职位卡卡面。
@@ -244,7 +246,7 @@ class JobCardSurface extends StatelessWidget {
     final pillOpacity = (1 - notchFill).clamp(0.0, 1.0);
     final tags = <Widget>[
       if (job.complaintCount > 0)
-        _ComplaintBadge(complaints: job.complaintCount),
+        _ComplaintBadge(assessment: assessmentForJob(job)),
       if (!job.isActive) GlassPill('已下架', icon: Icons.visibility_off_outlined, backgroundAlpha: 0.30),
       // 分类标签：用工类型（全职/兼职/项目/实习）与远程，均以标签形式标识
       GlassPill(job.typeLabel, icon: Icons.access_time, backgroundAlpha: 0.34),
@@ -455,7 +457,10 @@ class JobCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final accent = jobAccentColor(job.complaintCount);
+    // 服务端下发的等级优先（单一来源）；缺字段时退回本地口径
+    final assessment = assessmentForJob(job);
+    final accent = jobAccentColor(job.complaintCount,
+        staffSize: job.companyStaffSize, level: assessment.level);
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 12),
       child: Opacity(
@@ -464,7 +469,8 @@ class JobCard extends StatelessWidget {
           builder: (cardContext) => JobCardSurface(
             job: job,
             accent: accent,
-            accentDeep: jobAccentDeep(job.complaintCount),
+            accentDeep: jobAccentDeep(job.complaintCount,
+                staffSize: job.companyStaffSize, level: assessment.level),
             trailing: trailing,
             onTap: onTap ?? () => openJobDetailFrom(cardContext, job, onClosed: onClosed),
           ),
@@ -476,12 +482,12 @@ class JobCard extends StatelessWidget {
 
 /// 投诉等级徽标：白底 + 等级色，任何卡面主色上都清晰
 class _ComplaintBadge extends StatelessWidget {
-  final int complaints;
-  const _ComplaintBadge({required this.complaints});
+  final ComplaintAssessment assessment;
+  const _ComplaintBadge({required this.assessment});
 
   @override
   Widget build(BuildContext context) {
-    final level = complaintLevelOf(complaints);
+    final level = assessment.level;
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 4),
       decoration: BoxDecoration(
@@ -493,7 +499,7 @@ class _ComplaintBadge extends StatelessWidget {
         children: [
           Icon(level.icon, size: 12, color: level.color),
           const SizedBox(width: 4),
-          Text(level.badge(complaints),
+          Text(assessment.badge,
               style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: level.color)),
         ],
       ),

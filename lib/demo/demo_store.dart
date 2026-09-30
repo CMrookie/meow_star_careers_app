@@ -98,6 +98,7 @@ class DemoBackend {
       'name': '星河科技',
       'industry': '互联网 / SaaS',
       'description': '专注企业级协作平台与云原生产品，研发团队 200+，氛围开放，鼓励技术分享。',
+      'staffSize': 2000, // 规模大：同样的投诉次数折算成率后更轻
       'location': '北京 · 中关村',
       'website': 'https://example.com',
       'logoUrl': null,
@@ -126,11 +127,21 @@ class DemoBackend {
       int complaints = 0,
     }) {
       final t = at ?? DateTime.now().subtract(Duration(days: _idSeq ~/ 7));
+      final staffSize =
+          (_companyById(companyId ?? 'demo-company-star') ?? const {})['staffSize'] as int?;
+      // 演示模式下 demo_store 充当后端：按同一份规则算好等级/口径/率一并下发，
+      // 让 UI 只消费不计算（真实后端是唯一的规则来源）
+      final assessment = assessComplaints(complaints: complaints, staffSize: staffSize);
       _jobs.add({
         'id': id,
         'companyId': companyId ?? 'demo-company-star',
         'companyName': companyName ?? '星河科技',
         'complaintsCount': complaints,
+        // 职位视图带出用人单位规模，供客户端按「每百人投诉率」定级
+        'companyStaffSize': staffSize,
+        'complaintLevel': assessment.level.name,
+        'complaintBasis': assessment.basis.name,
+        'complaintRatePercent': assessment.ratePercent,
         'title': title,
         'description': desc,
         'requirements': req,
@@ -209,7 +220,8 @@ class DemoBackend {
       'id': 'demo-company-cloud',
       'name': '观云网络',
       'industry': '互联网',
-      'description': '示例企业：被投诉 3 次（中等信誉）。',
+      'description': '示例企业：120 人规模、被投诉 3 次。',
+      'staffSize': 120,
       'location': '杭州',
       'website': null,
       'logoUrl': null,
@@ -222,7 +234,8 @@ class DemoBackend {
       'id': 'demo-company-old',
       'name': '恒久信息',
       'industry': '信息服务',
-      'description': '示例企业：被投诉 9 次（偏低信誉）。',
+      'description': '示例企业：60 人规模、被投诉 9 次（小公司高频投诉）。',
+      'staffSize': 60,
       'location': '成都',
       'website': null,
       'logoUrl': null,
@@ -994,12 +1007,17 @@ class DemoBackend {
 
   /// 职位排序：投诉等级由优到劣（优秀 → 严重），同级按次数、最后按更新时间。
   static int _byComplaintLevel(Map<String, dynamic> a, Map<String, dynamic> b) {
-    final ka = (complaintLevelOf(_n(a, 'complaintsCount')).index, _n(a, 'complaintsCount'));
-    final kb = (complaintLevelOf(_n(b, 'complaintsCount')).index, _n(b, 'complaintsCount'));
+    // 与客户端同一套口径：按规模折算的每百人投诉率（规模缺失/过小时退回次数）
+    int? staff(Map<String, dynamic> j) =>
+        (j['companyStaffSize'] as num?)?.toInt() ?? (j['companySize'] as num?)?.toInt();
+    final ka = jobSortKey(_n(a, 'complaintsCount'), staff(a), DateTime.tryParse('${a['createdAt']}') ?? DateTime(2000));
+    final kb = jobSortKey(_n(b, 'complaintsCount'), staff(b), DateTime.tryParse('${b['createdAt']}') ?? DateTime(2000));
     final c0 = ka.$1.compareTo(kb.$1);
     if (c0 != 0) return c0;
     final c1 = ka.$2.compareTo(kb.$2);
     if (c1 != 0) return c1;
+    final c2 = ka.$3.compareTo(kb.$3);
+    if (c2 != 0) return c2;
     return '${b['updatedAt']}'.compareTo('${a['updatedAt']}');
   }
 

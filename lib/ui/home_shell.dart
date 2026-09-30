@@ -57,14 +57,30 @@ class _HomeShellState extends State<HomeShell> {
     });
   }
 
-  /// 首次进入 App 时提示投诉等级规则（本地记录 seen；规则版本变化会再次提示）
+  /// 首次进入 App 时提示投诉等级规则。
+  ///
+  /// 规则数字与版本都来自服务端（**单一来源**；取不到时用本地兜底），
+  /// 「已看过」的键按**版本号**区分 —— 后端调整口径后会自动再提示一次。
   Future<void> _maybeShowComplaintRule() async {
     final session = AppScope.read(context);
-    final seen = await session.config.store.read(complaintRuleSeenKey);
+    var rules = complaintRuleFallback;
+    final token = session.token;
+    if (!session.isDemo && token != null) {
+      try {
+        rules = await session.api.complaintRules(token);
+      } catch (_) {
+        // 拉不到规则时继续用兜底版本，不阻断进入 App
+      }
+    }
+    final seenKey = complaintRuleSeenKeyFor(rules.version);
+    final seen = await session.config.store.read(seenKey);
     if (seen == '1' || !mounted) return;
-    await session.config.store.write(complaintRuleSeenKey, '1');
+    await session.config.store.write(seenKey, '1');
     if (!mounted) return;
-    await showDialog<void>(context: context, builder: (_) => const ComplaintRuleDialog());
+    await showDialog<void>(
+      context: context,
+      builder: (_) => ComplaintRuleDialog(rules: rules),
+    );
   }
 
   @override

@@ -185,6 +185,10 @@ class AppScope extends InheritedNotifier<SessionController> {
     return scope!.notifier!;
   }
 
+  /// 同上，但未挂载时返回 null（测试里单独 pump 某个页面时用得上）。
+  static SessionController? maybeRead(BuildContext context) =>
+      context.getInheritedWidgetOfExactType<AppScope>()?.notifier;
+
   /// 只读取值：可在 initState 等不允许注册依赖的阶段使用（不建立依赖关系）。
   static SessionController read(BuildContext context) {
     final scope = context.getInheritedWidgetOfExactType<AppScope>();

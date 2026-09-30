@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../models/models.dart';
+import '../complaint_level.dart';
 import '../paged_list_view.dart';
 import '../theme.dart';
 import 'job_detail_page.dart';
@@ -63,7 +64,9 @@ class JobDetailRoute extends PageRouteBuilder<void> {
     final t = Curves.easeOutCubic.transform(animation.value);
     final to = targetRectFor(context, from);
     final rect = Rect.lerp(from, to, t)!;
-    final accent = jobAccentColor(job.complaintCount);
+    final level = assessmentForJob(job).level; // 服务端等级优先（单一来源）
+    final accent = jobAccentColor(job.complaintCount,
+        staffSize: job.companyStaffSize, level: level);
     final topPad = to.height - from.height;
     return _EdgeSwipeBack(
       controller: controller!,
@@ -83,7 +86,8 @@ class JobDetailRoute extends PageRouteBuilder<void> {
                 key: jobFlightKey,
                 job: job,
                 accent: accent,
-                accentDeep: jobAccentDeep(job.complaintCount),
+                accentDeep: jobAccentDeep(job.complaintCount,
+                    staffSize: job.companyStaffSize, level: level),
                 topInset: topPad * t,
                 notchFill: t,
               ),

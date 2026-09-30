@@ -89,6 +89,10 @@ class Company {
   final String? address;
   final String? website;
   final String? logoUrl;
+
+  /// 公司规模（员工人数，企业申报）；缺失表示未申报 —— 缺失时投诉等级退回次数口径
+  final int? staffSize;
+
   final bool isActive;
   final String? createdBy;
   final DateTime createdAt;
@@ -103,6 +107,7 @@ class Company {
     this.address,
     this.website,
     this.logoUrl,
+    this.staffSize,
     required this.isActive,
     this.createdBy,
     required this.createdAt,
@@ -118,6 +123,7 @@ class Company {
         address: _str(j, 'address'),
         website: _str(j, 'website'),
         logoUrl: _str(j, 'logoUrl'),
+        staffSize: _int(j, 'staffSize') ?? _int(j, 'size'),
         isActive: _bool(j, 'isActive', true),
         createdBy: _str(j, 'createdBy'),
         createdAt: _dt(j['createdAt']),
@@ -163,6 +169,21 @@ class JobView {
   final DateTime updatedAt;
   final int complaintCount;
 
+  /// 用人单位规模（员工人数）；由后端在职位视图里带出（`companyStaffSize`），
+  /// 缺失时投诉等级退回「投诉次数」口径。
+  final int? companyStaffSize;
+
+  /// 投诉等级（**服务端下发的单一来源**）：excellent / minor / alert / warning / severe。
+  /// 后端 `/jobs` 系列已按「公司规模折算的每百人投诉率」算好；
+  /// 缺失（演示数据 / 老后端）时才退回 [assessComplaints] 本地口径。
+  final String? complaintLevel;
+
+  /// 服务端定级所用口径：rate（按每百人投诉率）/ count（按投诉次数兜底）
+  final String? complaintBasis;
+
+  /// 每百人投诉率（%）；次数口径为 null
+  final double? complaintRatePercent;
+
   JobView({
     required this.id,
     required this.companyId,
@@ -181,6 +202,10 @@ class JobView {
     required this.createdAt,
     required this.updatedAt,
     this.complaintCount = 0,
+    this.companyStaffSize,
+    this.complaintLevel,
+    this.complaintBasis,
+    this.complaintRatePercent,
   });
 
   String get typeLabel => jobTypeLabel(jobType);
@@ -213,7 +238,73 @@ class JobView {
         createdAt: _dt(j['createdAt']),
         updatedAt: _dt(j['updatedAt']),
         complaintCount: _int(j, 'complaintsCount') ?? 0,
+        companyStaffSize: _int(j, 'companyStaffSize') ?? _int(j, 'companySize'),
+        complaintLevel: _str(j, 'complaintLevel'),
+        complaintBasis: _str(j, 'complaintBasis'),
+        complaintRatePercent: (j['complaintRatePercent'] as num?)?.toDouble(),
       );
+}
+
+/// 投诉定级规则（**服务端单一来源**）
+///
+/// 数字由后端 `GET /api/v1/complaint-rules` 下发（后端侧只写在后端 SQL 的
+/// `complaint_rule_*` 函数里），客户端不再维护第二份阈值：
+/// 判等级直接用职位视图里的 `complaintLevel`，区间文案用本类渲染。
+/// 离线 / 演示模式（无后端）时用 `complaintRuleFallback`（见 ui/complaint_level.dart）。
+class ComplaintRuleSet {
+  /// 规则版本（如 v2）：用于「版本变化重新提示」与本地 seen 键
+  final String version;
+
+  /// 等级序列（由优到劣）：excellent / minor / alert / warning / severe
+  final List<String> levels;
+
+  /// 规模 >= 该值时才按每百人投诉率定级（低于它退回次数口径）
+  final int minStaffSizeForRate;
+
+  /// 每百人投诉率上界（%）：0.5 / 1.5 / 3.0
+  final List<double> rateThresholds;
+
+  /// 投诉次数下界：[0, 1, 3, 6, 10]
+  final List<int> countThresholds;
+
+  const ComplaintRuleSet({
+    required this.version,
+    required this.levels,
+    required this.minStaffSizeForRate,
+    required this.rateThresholds,
+    required this.countThresholds,
+  });
+
+  factory ComplaintRuleSet.fromJson(Map<String, dynamic> j) => ComplaintRuleSet(
+        version: '${j['version'] ?? 'v2'}',
+        levels: (j['levels'] as List?)?.map((e) => '$e').toList() ??
+            const ['excellent', 'minor', 'alert', 'warning', 'severe'],
+        minStaffSizeForRate: (j['minStaffSizeForRate'] as num?)?.toInt() ?? 50,
+        rateThresholds: (j['rateThresholds'] as List?)
+                ?.map((e) => (e as num).toDouble())
+                .toList() ??
+            const [0.5, 1.5, 3.0],
+        countThresholds: (j['countThresholds'] as List?)
+                ?.map((e) => (e as num).toInt())
+                .toList() ??
+            const [0, 1, 3, 6, 10],
+      );
+
+  /// 次数口径区间文案（规模未申报/过小时的口径，与旧 range 同形）
+  String countRange(int index) {
+    if (index <= 0) return '0 次';
+    final low = index < countThresholds.length ? countThresholds[index] : 0;
+    final hasNext = index + 1 < countThresholds.length;
+    final high = hasNext ? countThresholds[index + 1] - 1 : null;
+    return high == null ? '$low 次及以上' : '$low – $high 次';
+  }
+
+  /// 率口径区间文案（有规模时）
+  String rateRange(int index) {
+    if (index <= 0) return '无投诉';
+    if (index > rateThresholds.length) return '> ${rateThresholds.last}%';
+    return '≤ ${rateThresholds[index - 1]}%';
+  }
 }
 
 /// 职位创建 / 编辑共用载荷

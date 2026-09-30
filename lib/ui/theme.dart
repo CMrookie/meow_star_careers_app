@@ -106,11 +106,16 @@ const notchPillFg = Color(0xFF1A2B6B);
 
 /// 职位卡片主色：**按投诉等级取色系**（优劣一眼可辨）
 /// 优秀=绿系 / 轻微=蓝系 / 预警=琥珀系 / 警告=橙红系 / 严重=红系。
+/// [level] 由调用方用 [assessmentForJob] 取（**服务端下发的等级优先**）；
+/// 不传时退回本地口径计算（演示模式 / 老后端）。
 /// 用工类型（全职、兼职、项目、实习）与远程等分类不再影响颜色，改为卡内标签标识。
-Color jobAccentColor(int complaintCount) => complaintLevelOf(complaintCount).surface;
+Color jobAccentColor(int complaintCount, {int? staffSize, ComplaintLevel? level}) =>
+    (level ?? assessComplaints(complaints: complaintCount, staffSize: staffSize).level).surface;
 
-/// 卡面渐变的深色端
-Color jobAccentDeep(int complaintCount) => complaintLevelOf(complaintCount).surfaceDeep;
+/// 卡面渐变的深色端（同样优先用服务端等级）
+Color jobAccentDeep(int complaintCount, {int? staffSize, ComplaintLevel? level}) =>
+    (level ?? assessComplaints(complaints: complaintCount, staffSize: staffSize).level)
+        .surfaceDeep;
 
 ThemeData buildTheme() {
   final scheme = ColorScheme.fromSeed(

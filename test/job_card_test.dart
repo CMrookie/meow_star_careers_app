@@ -285,7 +285,7 @@ void main() {
     addTearDown(tester.view.reset);
 
     final config = AppConfig(MemorySettingsStore());
-    await config.store.write(complaintRuleSeenKey, '1'); // 跳过首次规则提示
+    await config.store.write(complaintRuleSeenKeyFor('v2'), '1'); // 跳过首次规则提示
     final session = SessionController(config: config);
     await session.init();
     await tester.pumpWidget(
@@ -354,7 +354,7 @@ void main() {
     addTearDown(tester.view.reset);
 
     final config = AppConfig(MemorySettingsStore());
-    await config.store.write(complaintRuleSeenKey, '1'); // 跳过首次规则提示
+    await config.store.write(complaintRuleSeenKeyFor('v2'), '1'); // 跳过首次规则提示
     final session = SessionController(config: config);
     await session.init();
     await tester.pumpWidget(
@@ -430,7 +430,7 @@ void main() {
     addTearDown(tester.view.reset);
 
     final config = AppConfig(MemorySettingsStore());
-    await config.store.write(complaintRuleSeenKey, '1'); // 跳过首次规则提示
+    await config.store.write(complaintRuleSeenKeyFor('v2'), '1'); // 跳过首次规则提示
     final session = SessionController(config: config);
     await session.init();
     await tester.pumpWidget(

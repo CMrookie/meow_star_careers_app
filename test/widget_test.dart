@@ -22,7 +22,7 @@ http.Response _json(Object body, [int code = 200]) => http.Response.bytes(
 void main() {
   testWidgets('未登录时展示登录页', (tester) async {
     final config = AppConfig(MemorySettingsStore());
-    await config.store.write(complaintRuleSeenKey, '1'); // 跳过首次规则提示
+    await config.store.write(complaintRuleSeenKeyFor('v2'), '1'); // 跳过首次规则提示
     final session = SessionController(config: config);
     await session.init();
 
@@ -40,7 +40,7 @@ void main() {
 
   testWidgets('设置页可进入服务器地址弹窗', (tester) async {
     final config = AppConfig(MemorySettingsStore());
-    await config.store.write(complaintRuleSeenKey, '1'); // 跳过首次规则提示
+    await config.store.write(complaintRuleSeenKeyFor('v2'), '1'); // 跳过首次规则提示
     final session = SessionController(config: config);
     await session.init();
 
@@ -133,7 +133,7 @@ void main() {
 
   testWidgets('演示模式：一键进入求职者并展示内置数据', (tester) async {
     final config = AppConfig(MemorySettingsStore());
-    await config.store.write(complaintRuleSeenKey, '1'); // 跳过首次规则提示
+    await config.store.write(complaintRuleSeenKeyFor('v2'), '1'); // 跳过首次规则提示
     final session = SessionController(config: config);
     await session.init();
 
@@ -166,7 +166,7 @@ void main() {
     addTearDown(tester.view.reset);
 
     final config = AppConfig(MemorySettingsStore());
-    await config.store.write(complaintRuleSeenKey, '1'); // 跳过首次规则提示
+    await config.store.write(complaintRuleSeenKeyFor('v2'), '1'); // 跳过首次规则提示
     final session = SessionController(config: config);
     await session.init();
 

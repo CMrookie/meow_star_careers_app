@@ -1,15 +1,47 @@
 import 'package:flutter/material.dart';
 
+import '../models/models.dart';
+import '../state/session.dart';
 import 'complaint_level.dart';
 import 'theme.dart';
 import 'widgets.dart';
 
-/// 投诉等级规则页：等级表 + 定级依据
-class ComplaintRulesPage extends StatelessWidget {
+/// 投诉等级规则页：等级表 + 定级依据。
+///
+/// 页面上的**数字**来自服务端 `GET /api/v1/complaint-rules`（单一来源）：
+/// 率阈值与次数阈值都由接口下发，客户端不维护第二份；
+/// 离线 / 演示模式（无后端 / 未登录）时退回 [complaintRuleFallback]（与后端 v2 同值）。
+class ComplaintRulesPage extends StatefulWidget {
   const ComplaintRulesPage({super.key});
 
   @override
+  State<ComplaintRulesPage> createState() => _ComplaintRulesPageState();
+}
+
+class _ComplaintRulesPageState extends State<ComplaintRulesPage> {
+  ComplaintRuleSet _rules = complaintRuleFallback;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) => _loadRules());
+  }
+
+  Future<void> _loadRules() async {
+    final session = AppScope.maybeRead(context);
+    final token = session?.token;
+    if (session == null || session.isDemo || token == null) return;
+    try {
+      final rules = await session.api.complaintRules(token);
+      if (mounted) setState(() => _rules = rules);
+    } catch (_) {
+      // 取不到就继续用兜底规则，页面照常可读
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final rules = _rules;
     return Scaffold(
       backgroundColor: bgPage,
       appBar: AppBar(title: const Text('投诉等级规则')),
@@ -21,20 +53,25 @@ class ComplaintRulesPage extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 const SectionTitle('这套等级是干什么的'),
-                Text(
-                  '招聘信息本身看不出用工口碑。平台把用人单位**经审核的有效投诉次数**'
+                const Text(
+                  '招聘信息本身看不出用工口碑。平台把用人单位的投诉情况'
                   '划分为五个等级，做成直觉色标签显示在职位卡上，'
                   '让你在投递前就能把被广泛厌恶的单位挑出去。',
-                  style: const TextStyle(fontSize: 13, color: textSub, height: 1.6)
-                      .copyWith(color: textSub),
+                  style: TextStyle(fontSize: 13, color: textSub, height: 1.6),
                 ),
                 const SizedBox(height: 10),
-                const Text('次数口径',
-                    style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: textMain)),
+                Text('定级口径（规则 ${rules.version}）',
+                    style: const TextStyle(
+                        fontSize: 13, fontWeight: FontWeight.w700, color: textMain)),
                 const SizedBox(height: 4),
-                const Text(
-                  '统计该单位累计、且经平台审核通过的投诉条数（投诉需已与实际沟通过、证据 ≥20 字）。',
-                  style: TextStyle(fontSize: 12.5, color: textHint, height: 1.6),
+                Text(
+                  '有规模：企业申报员工数 ≥ ${rules.minStaffSizeForRate} 人时，按每百人投诉率定级 —— '
+                  '${rules.rateRange(1)} 轻微 / ${rules.rateRange(2)} 预警 / '
+                  '${rules.rateRange(3)} 警告 / ${rules.rateRange(4)} 严重。\n'
+                  '未申报规模或不足 ${rules.minStaffSizeForRate} 人：退回投诉次数定级 —— '
+                  '${rules.countRange(1)} 轻微 / ${rules.countRange(2)} 预警 / '
+                  '${rules.countRange(3)} 警告 / ${rules.countRange(4)} 严重。',
+                  style: const TextStyle(fontSize: 12.5, color: textHint, height: 1.6),
                 ),
               ],
             ),
@@ -45,8 +82,7 @@ class ComplaintRulesPage extends StatelessWidget {
             child: Text('五个等级',
                 style: TextStyle(fontSize: 16, fontWeight: FontWeight.w800, color: textMain)),
           ),
-          for (final level in ComplaintLevel.values)
-            _LevelCard(level: level, low: complaintLevelThresholds[level.index]),
+          for (final level in ComplaintLevel.values) _LevelCard(level: level, rules: rules),
           const SizedBox(height: 4),
           Padding(
             padding: const EdgeInsets.fromLTRB(12, 6, 12, 0),
@@ -93,8 +129,8 @@ class ComplaintRulesPage extends StatelessWidget {
 
 class _LevelCard extends StatelessWidget {
   final ComplaintLevel level;
-  final int low;
-  const _LevelCard({required this.level, required this.low});
+  final ComplaintRuleSet rules;
+  const _LevelCard({required this.level, required this.rules});
 
   @override
   Widget build(BuildContext context) {
@@ -121,9 +157,21 @@ class _LevelCard extends StatelessWidget {
               children: [
                 Row(children: [
                   Text(level.label,
-                      style: TextStyle(fontSize: 15, fontWeight: FontWeight.w800, color: level.color)),
+                      style: TextStyle(
+                          fontSize: 15, fontWeight: FontWeight.w800, color: level.color)),
                   const SizedBox(width: 8),
-                  TagChip(level.range, color: level.color),
+                  TagChip(rules.rateRange(level.index), color: level.color),
+                ]),
+                const SizedBox(height: 6),
+                Row(children: [
+                  TagChip(rules.countRange(level.index), color: textHint),
+                  const SizedBox(width: 6),
+                  Expanded(
+                    child: Text(
+                      '规模不足 ${rules.minStaffSizeForRate} 人时按次数',
+                      style: const TextStyle(fontSize: 11.5, color: textHint),
+                    ),
+                  ),
                 ]),
                 const SizedBox(height: 6),
                 Text(level.meaning,
@@ -139,7 +187,9 @@ class _LevelCard extends StatelessWidget {
 
 /// 首次进入 App 时的规则提示（可跳到完整规则页）
 class ComplaintRuleDialog extends StatelessWidget {
-  const ComplaintRuleDialog({super.key});
+  /// 规则数字来自服务端（单一来源）；缺省用本地兜底（测试 / 离线）
+  final ComplaintRuleSet rules;
+  const ComplaintRuleDialog({super.key, this.rules = complaintRuleFallback});
 
   @override
   Widget build(BuildContext context) {
@@ -151,7 +201,7 @@ class ComplaintRuleDialog extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             const Text(
-              '平台把用人单位「经审核的有效投诉次数」分成五档，用颜色标在职位卡上，'
+              '平台把用人单位的投诉情况分成五档，用颜色标在职位卡上，'
               '帮你把被广泛厌恶的单位提前挑掉：',
               style: TextStyle(fontSize: 13, color: textSub, height: 1.55),
             ),
@@ -173,8 +223,13 @@ class ComplaintRuleDialog extends StatelessWidget {
                             fontSize: 12.5, fontWeight: FontWeight.w700, color: level.color)),
                   ),
                   SizedBox(
-                    width: 84,
-                    child: Text(level.range,
+                    width: 58,
+                    child: Text(rules.rateRange(level.index),
+                        style: const TextStyle(fontSize: 12, color: textMain)),
+                  ),
+                  SizedBox(
+                    width: 74,
+                    child: Text(rules.countRange(level.index),
                         style: const TextStyle(fontSize: 12, color: textHint)),
                   ),
                   Expanded(
@@ -192,9 +247,11 @@ class ComplaintRuleDialog extends StatelessWidget {
                 ]),
               ),
             const SizedBox(height: 10),
-            const Text(
-              '只统计经平台审核通过的有效投诉，1–2 次只作中性提示，10 次及以上建议直接规避。',
-              style: TextStyle(fontSize: 12, color: textHint, height: 1.5),
+            Text(
+              '有规模按每百人投诉率（${rules.rateRange(1)} / ${rules.rateRange(2)} / '
+              '${rules.rateRange(3)}），规模不足 ${rules.minStaffSizeForRate} 人按投诉次数；'
+              '只统计经平台审核通过的有效投诉。',
+              style: const TextStyle(fontSize: 12, color: textHint, height: 1.5),
             ),
           ],
         ),

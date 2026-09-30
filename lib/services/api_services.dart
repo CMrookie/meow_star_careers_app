@@ -347,4 +347,10 @@ class ApiServices {
     );
     return ComplaintView.fromJson(data as Map<String, dynamic>);
   }
+
+  /// 定级规则（**单一来源**）：阈值由后端下发，客户端不再自己维护数字
+  Future<ComplaintRuleSet> complaintRules(String token) async {
+    final data = await api.request('GET', '/complaint-rules', token: token);
+    return ComplaintRuleSet.fromJson(data as Map<String, dynamic>);
+  }
 }
