@@ -324,4 +324,63 @@ void main() {
       );
     });
   });
+
+  group('AppConfig · TURN 配置持久化', () {
+    test('未配置时 hasTurn 为 false，且重启后仍为空', () async {
+      final store = MemorySettingsStore();
+      final cfg = AppConfig(store);
+      await cfg.load();
+      expect(cfg.hasTurn, isFalse);
+      expect(cfg.turnUrl, isNull);
+
+      // 模拟重启：新实例读同一个 store
+      final again = AppConfig(store);
+      await again.load();
+      expect(again.hasTurn, isFalse);
+    });
+
+    test('saveTurn 会写入 store，重启后能读回', () async {
+      final store = MemorySettingsStore();
+      final cfg = AppConfig(store);
+      await cfg.saveTurn(
+        url: 'turn:1.2.3.4:3478?transport=udp',
+        user: 'meow',
+        cred: 'secret',
+      );
+      expect(cfg.hasTurn, isTrue);
+
+      final again = AppConfig(store);
+      await again.load();
+      expect(again.turnUrl, 'turn:1.2.3.4:3478?transport=udp');
+      expect(again.turnUser, 'meow');
+      expect(again.turnCred, 'secret');
+    });
+
+    test('空白与首尾空格会被规整：空串等于清空，非空会 trim', () async {
+      final store = MemorySettingsStore();
+      final cfg = AppConfig(store);
+
+      await cfg.saveTurn(url: '  turn:a.com:80  ', user: '  ', cred: '\n');
+      expect(cfg.turnUrl, 'turn:a.com:80', reason: '首尾空格应被去掉');
+      expect(cfg.turnUser, isNull, reason: '只有空白等于未填');
+      expect(cfg.turnCred, isNull);
+
+      await cfg.saveTurn(url: '   ', user: 'u', cred: 'c');
+      expect(cfg.hasTurn, isFalse, reason: '空白地址等于不使用 TURN');
+      expect(cfg.turnUrl, isNull);
+    });
+
+    test('clearTurn 会把三个字段从 store 中移除', () async {
+      final store = MemorySettingsStore();
+      final cfg = AppConfig(store);
+      await cfg.saveTurn(url: 'turn:a.com:80', user: 'u', cred: 'c');
+      await cfg.clearTurn();
+
+      expect(cfg.hasTurn, isFalse);
+      expect(await store.read('turnUrl'), isNull,
+          reason: '应删除而不是写入空串，避免下次读出 ""');
+      expect(await store.read('turnUser'), isNull);
+      expect(await store.read('turnCred'), isNull);
+    });
+  });
 }

@@ -128,6 +128,11 @@ class _InterviewRoomPageState extends State<InterviewRoomPage> {
     }
   }
 
+  // ── 连通性诊断：区分「严格 NAT 需要 TURN」与「普通网络抖动」──
+  bool _connectedOnce = false;
+  bool _sawRelayCandidate = false;
+  final Map<String, int> _candidateKinds = <String, int>{};
+
   Future<RTCPeerConnection> _ensurePeer() async {
     var pc = _pc;
     if (pc != null) return pc;
@@ -143,6 +148,10 @@ class _InterviewRoomPageState extends State<InterviewRoomPage> {
     _pc = pc;
 
     pc.onIceCandidate = (RTCIceCandidate candidate) {
+      final kind = iceCandidateKind(candidate.candidate);
+      _candidateKinds[kind] = (_candidateKinds[kind] ?? 0) + 1;
+      if (kind == 'relay') _sawRelayCandidate = true;
+      debugPrint('[room] local candidate: $kind');
       _session.realtime.sendSignal(widget.interviewId, {
         'kind': 'ice',
         'candidate': candidate.candidate,
@@ -158,9 +167,28 @@ class _InterviewRoomPageState extends State<InterviewRoomPage> {
     };
     pc.onConnectionState = (state) {
       if (!mounted) return;
+      if (state == RTCPeerConnectionState.RTCPeerConnectionStateConnected) {
+        _connectedOnce = true;
+        return;
+      }
       if (state == RTCPeerConnectionState.RTCPeerConnectionStateDisconnected ||
           state == RTCPeerConnectionState.RTCPeerConnectionStateFailed) {
-        showToast(context, '连接不稳定，请检查网络', error: true);
+        final cfg = AppScope.read(context).config;
+        debugPrint('[room] ICE failed: candidates=$_candidateKinds '
+            'relay=$_sawRelayCandidate turnConfigured=${cfg.hasTurn} '
+            'connectedBefore=$_connectedOnce');
+        // 从未连通过 + 没配 TURN + 一个 relay 候选都没有 → 典型「双方都在严格 NAT」，
+        // 这时泛泛地说「检查网络」没用，要直接指向 TURN 配置。
+        if (!_connectedOnce && !cfg.hasTurn && !_sawRelayCandidate) {
+          showToast(
+            context,
+            '连不通：双方网络都在严格 NAT（企业网 / 部分 4G）后面，P2P 打不通。'
+            '请到「我的 → 设置 → 视频通话中继（TURN）」配置中继后重试',
+            error: true,
+          );
+        } else {
+          showToast(context, '连接不稳定，请检查网络', error: true);
+        }
       }
     };
 

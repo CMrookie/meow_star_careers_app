@@ -62,10 +62,37 @@ class AppConfig {
 
   Future<void> saveToken(String? value) async {
     token = value;
+    await _writeOrRemove('token', value);
+  }
+
+  /// 保存 TURN 配置（视频通话中继）。任一项留空/只有空白 = 清空该字段。
+  ///
+  /// 三项全空时等价于 [clearTurn]，回到「只用公共 STUN」。
+  Future<void> saveTurn({String? url, String? user, String? cred}) async {
+    turnUrl = _norm(url);
+    turnUser = _norm(user);
+    turnCred = _norm(cred);
+    await _writeOrRemove('turnUrl', turnUrl);
+    await _writeOrRemove('turnUser', turnUser);
+    await _writeOrRemove('turnCred', turnCred);
+  }
+
+  /// 清空 TURN 配置（回到只用公共 STUN）。
+  Future<void> clearTurn() => saveTurn();
+
+  /// 当前是否配置了 TURN。
+  bool get hasTurn => turnUrl != null && turnUrl!.trim().isNotEmpty;
+
+  static String? _norm(String? v) {
+    final t = v?.trim();
+    return (t == null || t.isEmpty) ? null : t;
+  }
+
+  Future<void> _writeOrRemove(String key, String? value) async {
     if (value == null) {
-      await store.remove('token');
+      await store.remove(key);
     } else {
-      await store.write('token', value);
+      await store.write(key, value);
     }
   }
 

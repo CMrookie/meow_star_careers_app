@@ -94,8 +94,23 @@ test/        模型、服务(经 MockClient 校验请求体/鉴权头/参数)、
 3. 先在单台设备「我的 → 设置 → 摄像头 / 麦克风自检」验证本机采集与授权（再进双端，避免权限问题干扰联调）；
 4. 招聘者对投递发起「即时面试」→ 求职者进入房间 → 互通后测试静音/关画面/切换摄像头/挂断结束。
 
-- 同网段走内置 Google STUN 即可；跨公网/对称 NAT 需自建 TURN 并配置
-  `lib/ui/interviews/interview_room_page.dart` 的 `iceServers`。
+- ICE 默认走**大陆可直连的公共 STUN**（见 `lib/core/ice_config.dart`），
+  **同网段 / 多数家用宽带可直接 P2P 打通**，无需任何配置。
+- **双方都在对称 NAT（企业网 / 部分 4G / 严格防火墙）后面时 STUN 不够，必须经 TURN 中继。**
+  在 App 内「我的 → 设置 → 视频通话中继（TURN）」即可配置，**改完下次进房间生效，无需重新打包**：
+  - 支持一次填多个地址（英文逗号分隔，如 `turn:h:3478?transport=udp,turn:h:443?transport=tcp`），
+    UDP 被封时 TCP 443 通常能穿过去；
+  - 留空 = 不使用 TURN；
+  - 设置页提供**「填入公开测试服」**一键填入（Open Relay Project，免费共享，**仅供本地联调**，
+    媒体流会经第三方中转，稳定性无保证）。
+- 公共 STUN 实测（2026-09，`python3 tool/turn_probe.py stun`）：`stun.chat.bilibili.com`
+  与 `stun.hitv.com` 均正常返回公网映射地址；`stun.miwifi.com` 在部分网络会超时（仅冗余用）。
+  **「公开测试 TURN」（Open Relay）实测已失效**：Allocate 返回 400，只相当于 STUN，
+  对称 NAT 下仍打不通 —— 所以 TURN 必须自建。
+- 正式环境请**自建 coturn**（可执行步骤见 [`deploy/turn/README.md`](deploy/turn/README.md)：
+  安全组端口、`external-ip` 这个最容易踩的坑、验证脚本与排错清单都在里面），
+  把 `turn:<host>:3478?transport=udp` 与凭据填进设置页即可，
+  代码无需改动。
 - 服务端 WS 联调探针见 `tool/ws_signal_probe.dart`、`tool/ws_state_probe.dart`。
 
 ## 约定与限制
